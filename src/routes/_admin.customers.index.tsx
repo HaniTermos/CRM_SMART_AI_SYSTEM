@@ -1,0 +1,110 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useMyStore } from "@/lib/use-my-store";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { useState, useMemo } from "react";
+
+export const Route = createFileRoute("/_admin/customers/")({
+  component: CustomersList,
+});
+
+const segmentVariant: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
+  new: "secondary",
+  active: "default",
+  vip: "default",
+  at_risk: "outline",
+  churned: "destructive",
+};
+
+function CustomersList() {
+  const { data: store } = useMyStore();
+  const [q, setQ] = useState("");
+
+  const { data: customers = [], isLoading } = useQuery({
+    queryKey: ["customers", store?.id],
+    enabled: !!store?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("id, name, phone, email, total_orders, total_spent, last_order_at, segment, created_at")
+        .eq("store_id", store!.id)
+        .order("last_order_at", { ascending: false, nullsFirst: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const filtered = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    if (!s) return customers;
+    return customers.filter((c) =>
+      [c.name, c.phone, c.email].filter(Boolean).some((v) => v!.toString().toLowerCase().includes(s)),
+    );
+  }, [customers, q]);
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
+          <p className="mt-1 text-muted-foreground">Your buyers, ranked by activity.</p>
+        </div>
+        <Input
+          placeholder="Search name, phone, email…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          className="w-full max-w-xs"
+        />
+      </header>
+
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : filtered.length === 0 ? (
+        <Card>
+          <CardContent className="p-10 text-center text-muted-foreground">
+            {customers.length === 0 ? "No customers yet — share your shop link to get orders." : "No matches."}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <table className="w-full text-sm">
+              <thead className="border-b bg-muted/40 text-left">
+                <tr>
+                  <th className="p-3">Customer</th>
+                  <th className="p-3">Segment</th>
+                  <th className="p-3">Orders</th>
+                  <th className="p-3">Spent</th>
+                  <th className="p-3">Last order</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((c) => (
+                  <tr key={c.id} className="border-b last:border-0 hover:bg-accent/40">
+                    <td className="p-3">
+                      <Link to="/customers/$id" params={{ id: c.id }} className="font-medium text-primary hover:underline">
+                        {c.name ?? "Unnamed"}
+                      </Link>
+                      <div className="text-xs text-muted-foreground">{c.phone}</div>
+                    </td>
+                    <td className="p-3">
+                      <Badge variant={segmentVariant[c.segment] ?? "secondary"}>{c.segment}</Badge>
+                    </td>
+                    <td className="p-3">{c.total_orders}</td>
+                    <td className="p-3">{store?.currency} {Number(c.total_spent).toFixed(2)}</td>
+                    <td className="p-3 text-muted-foreground">
+                      {c.last_order_at ? new Date(c.last_order_at).toLocaleDateString() : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
