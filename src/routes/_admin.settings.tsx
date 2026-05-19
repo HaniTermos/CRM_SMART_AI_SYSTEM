@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+
 import { useAuth } from "@/lib/auth-context";
 import { useMyStore } from "@/lib/use-my-store";
 import {
@@ -34,11 +34,6 @@ function SettingsPage() {
   const { data: store } = useMyStore();
   const qc = useQueryClient();
 
-  const update = useServerFn(updateStoreSettings);
-  const invite = useServerFn(inviteTeamMember);
-  const remove = useServerFn(removeTeamMember);
-  const listFn = useServerFn(listTeamMembers);
-
   const [name, setName] = useState("");
   const [currency, setCurrency] = useState("");
   const [shipping, setShipping] = useState("");
@@ -55,7 +50,7 @@ function SettingsPage() {
   const { data: members = [] } = useQuery({
     queryKey: ["team", store?.id],
     enabled: !!store?.id,
-    queryFn: async () => listFn({ data: { storeId: store!.id } }),
+    queryFn: async () => listTeamMembers({ data: { storeId: store!.id } }),
   });
 
   const saveSettings = useMutation({
@@ -63,7 +58,7 @@ function SettingsPage() {
       if (!store) throw new Error("No store");
       const fee = Number(shipping);
       if (!Number.isFinite(fee) || fee < 0) throw new Error("Invalid shipping fee");
-      return update({
+      return updateStoreSettings({
         data: {
           storeId: store.id,
           name: name.trim(),
@@ -85,7 +80,7 @@ function SettingsPage() {
   const sendInvite = useMutation({
     mutationFn: async () => {
       if (!store) throw new Error("No store");
-      return invite({
+      return inviteTeamMember({
         data: { storeId: store.id, email: inviteEmail.trim(), role: inviteRole },
       });
     },
@@ -100,7 +95,7 @@ function SettingsPage() {
   const removeMember = useMutation({
     mutationFn: async (userId: string) => {
       if (!store) throw new Error("No store");
-      return remove({ data: { storeId: store.id, userId } });
+      return removeTeamMember({ data: { storeId: store.id, userId } });
     },
     onSuccess: () => {
       toast.success("Removed");

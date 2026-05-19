@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useMyStore } from "@/lib/use-my-store";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,43 +29,20 @@ function OrderDetail() {
   const { data: order, isLoading } = useQuery({
     queryKey: ["order", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select(
-          "id, order_number, status, subtotal, shipping_fee, total, shipping_address, notes, created_at, store_id, customer_id, customers(id, name, phone, email)"
-        )
-        .eq("id", id)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
+      if (!store) return null;
+      const res = await api.get(`/orders/${store.id}/${id}`);
+      const data = res.data.data;
+      return { ...data, customers: data.customer };
     },
+    enabled: !!store,
   });
 
-  const { data: items = [] } = useQuery({
-    queryKey: ["order-items", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("order_items")
-        .select("id, product_name, unit_price, quantity, subtotal")
-        .eq("order_id", id);
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
+  const items = order?.items ?? [];
 
   const updateStatus = useMutation({
     mutationFn: async (status: (typeof STATUSES)[number]) => {
-      const { error } = await supabase.from("orders").update({ status }).eq("id", id);
-      if (error) throw error;
-      // Activity log
-      if (order?.customer_id && order?.store_id) {
-        await supabase.from("customer_activities").insert({
-          store_id: order.store_id,
-          customer_id: order.customer_id,
-          type: "order_status_changed",
-          payload: { order_id: id, status },
-        });
-      }
+      if (!store) throw new Error("No store");
+      await api.patch(`/orders/${store.id}/${id}/status`, { status });
     },
     onSuccess: () => {
       toast.success("Status updated");

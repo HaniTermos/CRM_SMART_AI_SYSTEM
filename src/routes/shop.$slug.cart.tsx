@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCart } from "@/lib/cart-context";
@@ -17,12 +17,8 @@ function CartPage() {
   const { data: store } = useQuery({
     queryKey: ["public-store", slug],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("stores")
-        .select("currency, shipping_fee")
-        .eq("slug", slug)
-        .maybeSingle();
-      return data;
+      const res = await api.get(`/public/stores/${slug}`);
+      return res.data.data;
     },
   });
 

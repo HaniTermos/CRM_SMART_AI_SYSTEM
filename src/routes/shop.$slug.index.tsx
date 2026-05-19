@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,8 +20,8 @@ function ShopHome() {
   const { data: store } = useQuery({
     queryKey: ["public-store", slug],
     queryFn: async () => {
-      const { data } = await supabase.from("stores").select("id, currency").eq("slug", slug).maybeSingle();
-      return data;
+      const res = await api.get(`/public/stores/${slug}`);
+      return res.data.data;
     },
   });
 
@@ -29,14 +29,8 @@ function ShopHome() {
     queryKey: ["public-products", store?.id],
     enabled: !!store?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, name, slug, price, image_url, description, category_id")
-        .eq("store_id", store!.id)
-        .eq("status", "active")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
+      const res = await api.get(`/public/stores/${store!.id}/products`);
+      return res.data.data;
     },
   });
 
@@ -44,13 +38,8 @@ function ShopHome() {
     queryKey: ["public-categories", store?.id],
     enabled: !!store?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("id, name")
-        .eq("store_id", store!.id)
-        .order("name");
-      if (error) throw error;
-      return data ?? [];
+      const res = await api.get(`/public/stores/${store!.id}/categories`);
+      return res.data.data;
     },
   });
 

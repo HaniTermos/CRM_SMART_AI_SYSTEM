@@ -3,7 +3,7 @@ import { createFileRoute, Outlet, Link, useNavigate, useLocation } from "@tansta
 import { useAuth } from "@/lib/auth-context";
 import { useMyStore } from "@/lib/use-my-store";
 import { useAlerts, getReadIds } from "@/lib/use-alerts";
-import { supabase } from "@/integrations/supabase/client";
+// supabase import removed
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -92,8 +92,8 @@ function AdminLayout() {
             size="sm"
             className="w-full justify-start"
             onClick={async () => {
-              await supabase.auth.signOut();
-              navigate({ to: "/login" });
+              localStorage.removeItem('smartstore_token');
+              window.location.href = "/login";
             }}
           >
             <LogOut className="mr-2 h-4 w-4" />

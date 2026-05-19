@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useMyStore } from "@/lib/use-my-store";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,14 +34,11 @@ function CustomerDetail() {
   const { data: customer, isLoading } = useQuery({
     queryKey: ["customer", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("customers")
-        .select("id, name, phone, email, total_orders, total_spent, last_order_at, segment, notes, created_at, store_id")
-        .eq("id", id)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
+      if (!store) return null;
+      const res = await api.get(`/customers/${store.id}/${id}`);
+      return res.data.data;
     },
+    enabled: !!store,
   });
 
   useEffect(() => {
@@ -51,34 +48,27 @@ function CustomerDetail() {
   const { data: orders = [] } = useQuery({
     queryKey: ["customer-orders", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("id, order_number, status, total, created_at")
-        .eq("customer_id", id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
+      if (!store) return [];
+      const res = await api.get(`/orders/${store.id}`);
+      return res.data.data.filter((o: any) => o.customer_id === id);
     },
+    enabled: !!store,
   });
 
   const { data: activities = [] } = useQuery({
     queryKey: ["customer-activities", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("customer_activities")
-        .select("id, type, payload, created_at")
-        .eq("customer_id", id)
-        .order("created_at", { ascending: false })
-        .limit(50);
-      if (error) throw error;
-      return data ?? [];
+      if (!store) return [];
+      const res = await api.get(`/customers/${store.id}/${id}/history`);
+      return res.data.data;
     },
+    enabled: !!store,
   });
 
   const saveSegment = useMutation({
     mutationFn: async (segment: (typeof SEGMENTS)[number]) => {
-      const { error } = await supabase.from("customers").update({ segment }).eq("id", id);
-      if (error) throw error;
+      if (!store) throw new Error("No store");
+      await api.put(`/customers/${store.id}/${id}`, { segment });
     },
     onSuccess: () => {
       toast.success("Segment updated");
@@ -90,16 +80,12 @@ function CustomerDetail() {
 
   const saveNotes = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("customers").update({ notes }).eq("id", id);
-      if (error) throw error;
-      if (customer?.store_id) {
-        await supabase.from("customer_activities").insert({
-          store_id: customer.store_id,
-          customer_id: id,
-          type: "note_added",
-          payload: { length: notes.length },
-        });
-      }
+      if (!store) throw new Error("No store");
+      await api.put(`/customers/${store.id}/${id}`, { notes });
+      await api.post(`/customers/${store.id}/${id}/activity`, {
+        type: "note_added",
+        payload: { length: notes.length },
+      });
     },
     onSuccess: () => {
       toast.success("Notes saved");
@@ -217,7 +203,7 @@ function CustomerDetail() {
         </div>
 
         <aside className="space-y-4">
-          <AiInsightCard customerId={customer.id} customerEmail={customer.email ?? null} />
+          <AiInsightCard customerId={customer.id} storeId={store!.id} customerEmail={customer.email ?? null} />
           <Card>
             <CardContent className="space-y-3 p-4">
               <h3 className="font-semibold">Internal notes</h3>

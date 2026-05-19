@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { supabase } from "@/integrations/supabase/client";
+
 import { generateCustomerInsight } from "@/lib/ai.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,34 +17,30 @@ type Insight = {
   created_at: string;
 };
 
+import { api } from "@/lib/api";
+
 export function AiInsightCard({
   customerId,
+  storeId,
   customerEmail,
 }: {
   customerId: string;
+  storeId: string;
   customerEmail: string | null;
 }) {
   const qc = useQueryClient();
-  const generate = useServerFn(generateCustomerInsight);
 
   const { data: latest } = useQuery({
     queryKey: ["ai-insight", customerId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ai_insights")
-        .select("id, summary, next_action, email_subject, email_body, recommendations, created_at")
-        .eq("customer_id", customerId)
-        .eq("kind", "customer_followup")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (error) throw error;
-      return data as Insight | null;
+      const res = await api.get(`/ai/${storeId}/customer/${customerId}`);
+      const list = res.data.data;
+      return list.length > 0 ? (list[0] as Insight) : null;
     },
   });
 
   const run = useMutation({
-    mutationFn: async () => generate({ data: { customerId } }),
+    mutationFn: async () => generateCustomerInsight({ data: { storeId, customerId } }),
     onSuccess: () => {
       toast.success("Insight generated");
       qc.invalidateQueries({ queryKey: ["ai-insight", customerId] });

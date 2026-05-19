@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useMyStore } from "@/lib/use-my-store";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,13 +27,8 @@ function CustomersList() {
     queryKey: ["customers", store?.id],
     enabled: !!store?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("customers")
-        .select("id, name, phone, email, total_orders, total_spent, last_order_at, segment, created_at")
-        .eq("store_id", store!.id)
-        .order("last_order_at", { ascending: false, nullsFirst: false });
-      if (error) throw error;
-      return data ?? [];
+      const res = await api.get(`/customers/${store!.id}`);
+      return res.data.data;
     },
   });
 

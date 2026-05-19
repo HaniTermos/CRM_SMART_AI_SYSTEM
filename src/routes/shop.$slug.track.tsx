@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link, useParams, useNavigate, useSearch } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
+
 import { z } from "zod";
 import { lookupOrder } from "@/lib/order-lookup.functions";
 import { Button } from "@/components/ui/button";
@@ -20,13 +20,13 @@ export const Route = createFileRoute("/shop/$slug/track")({
   component: TrackPage,
 });
 
-type LookupResult = Awaited<ReturnType<ReturnType<typeof useServerFn<typeof lookupOrder>>>>;
+type LookupResult = Awaited<ReturnType<typeof lookupOrder>>;
 
 function TrackPage() {
   const { slug } = useParams({ from: "/shop/$slug/track" });
   const navigate = useNavigate();
   const search = useSearch({ from: "/shop/$slug/track" });
-  const lookupFn = useServerFn(lookupOrder);
+  const lookupFn = lookupOrder;
 
   const [orderNumber, setOrderNumber] = useState(search.o ?? "");
   const [phone, setPhone] = useState(search.p ?? "");

@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { slugify } from "@/lib/slugify";
 import { Button } from "@/components/ui/button";
@@ -45,55 +45,19 @@ function Onboarding() {
 
     setBusy(true);
 
-    // Re-check the live session right before insert. RLS requires
-    // owner_user_id = auth.uid(), and a stale/expired session is the
-    // most common cause of "new row violates row-level security policy".
-    const { data: authData, error: authErr } = await supabase.auth.getUser();
-    if (authErr || !authData.user) {
-      setBusy(false);
-      toast.error("Your session has expired. Please sign in again.");
-      navigate({ to: "/login" });
-      return;
-    }
-    const currentUserId = authData.user.id;
-
-    // Create store
-    const { data: store, error: storeErr } = await supabase
-      .from("stores")
-      .insert({
+    try {
+      await api.post("/stores", {
         name: parsed.data.name,
         slug: parsed.data.slug,
-        owner_user_id: currentUserId,
-      })
-      .select("id")
-      .single();
+      });
 
-    if (storeErr || !store) {
+      toast.success("Store created!");
+      await qc.invalidateQueries({ queryKey: ["my-store"] });
+      window.location.href = "/dashboard"; // Reloads to fetch updated auth token claims
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Could not create store");
       setBusy(false);
-      toast.error(storeErr?.message ?? "Could not create store");
-      return;
     }
-
-    // Assign owner role
-    const { error: roleErr } = await supabase.from("user_roles").insert({
-      user_id: currentUserId,
-      store_id: store.id,
-      role: "owner",
-    });
-
-    if (roleErr) {
-      setBusy(false);
-      toast.error(`Store created, but role assignment failed: ${roleErr.message}`);
-      return;
-    }
-
-    // Link profile to store
-    await supabase.from("profiles").update({ store_id: store.id }).eq("id", currentUserId);
-
-    setBusy(false);
-    toast.success("Store created!");
-    await qc.invalidateQueries({ queryKey: ["my-store"] });
-    navigate({ to: "/dashboard" });
   }
 
   return (

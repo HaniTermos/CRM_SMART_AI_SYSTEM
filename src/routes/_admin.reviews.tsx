@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+
 import { useMyStore } from "@/lib/use-my-store";
-import { listReviews, setReviewStatus, deleteReview } from "@/lib/reviews.functions";
+import { listReviews, setReviewStatus, deleteReview as delReview } from "@/lib/reviews.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,34 +26,29 @@ type Status = "pending" | "approved" | "hidden" | "all";
 function ReviewsPage() {
   const { data: store } = useMyStore();
   const qc = useQueryClient();
-  const listFn = useServerFn(listReviews);
-  const setStatusFn = useServerFn(setReviewStatus);
-  const deleteFn = useServerFn(deleteReview);
-
-  const [tab, setTab] = useState<Status>("pending");
+  const [filter, setFilter] = useState<"pending" | "approved" | "hidden" | "all">("pending");
 
   const { data: reviews = [], isLoading } = useQuery({
-    queryKey: ["reviews", store?.id, tab],
+    queryKey: ["reviews", store?.id, filter],
     enabled: !!store?.id,
-    queryFn: () => listFn({ data: { storeId: store!.id, status: tab } }),
+    queryFn: () => listReviews({ data: { storeId: store!.id, status: filter } }),
   });
 
-  const update = useMutation({
+  const updateStatus = useMutation({
     mutationFn: (input: { id: string; status: "pending" | "approved" | "hidden" }) =>
-      setStatusFn({ data: { storeId: store!.id, ...input } }),
+      setReviewStatus({ data: { storeId: store!.id, ...input } }),
     onSuccess: () => {
+      toast.success("Status updated");
       qc.invalidateQueries({ queryKey: ["reviews", store?.id] });
-      toast.success("Updated");
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const remove = useMutation({
-    mutationFn: (id: string) =>
-      deleteFn({ data: { storeId: store!.id, id } }),
+    mutationFn: (id: string) => delReview({ data: { storeId: store!.id, id } }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["reviews", store?.id] });
       toast.success("Deleted");
+      qc.invalidateQueries({ queryKey: ["reviews", store?.id] });
     },
   });
 
@@ -69,17 +64,17 @@ function ReviewsPage() {
         </p>
       </header>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as Status)}>
+      <Tabs value={filter} onValueChange={(v) => setFilter(v as Status)}>
         <TabsList>
           <TabsTrigger value="pending">Pending</TabsTrigger>
           <TabsTrigger value="approved">Approved</TabsTrigger>
           <TabsTrigger value="hidden">Hidden</TabsTrigger>
           <TabsTrigger value="all">All</TabsTrigger>
         </TabsList>
-        <TabsContent value={tab} className="mt-4">
+        <TabsContent value={filter} className="mt-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base capitalize">{tab} reviews</CardTitle>
+              <CardTitle className="text-base capitalize">{filter} reviews</CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -127,7 +122,7 @@ function ReviewsPage() {
                           <Button
                             size="sm"
                             onClick={() =>
-                              update.mutate({ id: r.id, status: "approved" })
+                              updateStatus.mutate({ id: r.id, status: "approved" })
                             }
                           >
                             <Check className="mr-1 h-3 w-3" /> Approve
@@ -138,7 +133,7 @@ function ReviewsPage() {
                             size="sm"
                             variant="outline"
                             onClick={() =>
-                              update.mutate({ id: r.id, status: "hidden" })
+                              updateStatus.mutate({ id: r.id, status: "hidden" })
                             }
                           >
                             <EyeOff className="mr-1 h-3 w-3" /> Hide

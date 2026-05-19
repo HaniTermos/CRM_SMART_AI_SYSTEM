@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "./api";
 import { useAuth } from "./auth-context";
 
 export type MyStore = {
@@ -19,25 +19,14 @@ export function useMyStore() {
     enabled: !!user && !loading,
     queryFn: async (): Promise<MyStore | null> => {
       if (!user) return null;
-      // Find first store the user is a member of
-      const { data: roleRow, error: roleErr } = await supabase
-        .from("user_roles")
-        .select("store_id")
-        .eq("user_id", user.id)
-        .limit(1)
-        .maybeSingle();
-
-      if (roleErr) throw roleErr;
-      if (!roleRow?.store_id) return null;
-
-      const { data: store, error: storeErr } = await supabase
-        .from("stores")
-        .select("id, name, slug, currency, shipping_fee, owner_user_id")
-        .eq("id", roleRow.store_id)
-        .single();
-
-      if (storeErr) throw storeErr;
-      return store as MyStore;
+      
+      const res = await api.get('/stores/me');
+      const stores = res.data.data;
+      
+      if (stores && stores.length > 0) {
+        return stores[0] as MyStore;
+      }
+      return null;
     },
   });
 }

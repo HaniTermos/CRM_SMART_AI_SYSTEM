@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { supabase } from "@/integrations/supabase/client";
+
+import { api } from "@/lib/api";
 import { useMyStore } from "@/lib/use-my-store";
 import { scoreProductIdea } from "@/lib/demand.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,7 +45,7 @@ function asRecs(v: unknown): Recs {
 function DemandPage() {
   const { data: store } = useMyStore();
   const qc = useQueryClient();
-  const run = useServerFn(scoreProductIdea);
+  const run = scoreProductIdea;
 
   const [idea, setIdea] = useState("");
   const [price, setPrice] = useState("");
@@ -54,15 +54,8 @@ function DemandPage() {
     queryKey: ["demand-history", store?.id],
     enabled: !!store?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ai_insights")
-        .select("id, created_at, summary, next_action, email_subject, recommendations")
-        .eq("store_id", store!.id)
-        .eq("kind", "product_demand")
-        .order("created_at", { ascending: false })
-        .limit(20);
-      if (error) throw error;
-      return (data ?? []) as DemandRow[];
+      const res = await api.get(`/ai/${store!.id}/demand-history`);
+      return res.data.data;
     },
   });
 

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useMyStore } from "@/lib/use-my-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,13 +18,8 @@ function ProductsList() {
     queryKey: ["products", store?.id],
     enabled: !!store?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, name, slug, price, stock, status, image_url, category_id")
-        .eq("store_id", store!.id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
+      const res = await api.get(`/products/${store!.id}`);
+      return res.data.data;
     },
   });
 

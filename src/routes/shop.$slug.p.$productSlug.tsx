@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCart } from "@/lib/cart-context";
@@ -21,8 +21,8 @@ function ProductPage() {
   const { data: store } = useQuery({
     queryKey: ["public-store", slug],
     queryFn: async () => {
-      const { data } = await supabase.from("stores").select("id, currency").eq("slug", slug).maybeSingle();
-      return data;
+      const res = await api.get(`/public/stores/${slug}`);
+      return res.data.data;
     },
   });
 
@@ -30,15 +30,8 @@ function ProductPage() {
     queryKey: ["public-product", store?.id, productSlug],
     enabled: !!store?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, name, slug, price, image_url, description, stock")
-        .eq("store_id", store!.id)
-        .eq("slug", productSlug)
-        .eq("status", "active")
-        .maybeSingle();
-      if (error) throw error;
-      return data;
+      const res = await api.get(`/public/stores/${store!.id}/products/${productSlug}`);
+      return res.data.data;
     },
   });
 

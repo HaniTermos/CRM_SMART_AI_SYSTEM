@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { supabase } from "@/integrations/supabase/client";
+
+import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,8 +20,8 @@ function CheckoutPage() {
   const { slug } = useParams({ from: "/shop/$slug/checkout" });
   const navigate = useNavigate();
   const cart = useCart();
-  const placeOrderFn = useServerFn(placeOrder);
-  const validateFn = useServerFn(validateDiscount);
+  const placeOrderFn = placeOrder;
+  const validateFn = validateDiscount;
   const [submitting, setSubmitting] = useState(false);
   const [discountInput, setDiscountInput] = useState("");
   const [applied, setApplied] = useState<{ code: string; amount: number } | null>(null);
@@ -43,12 +43,8 @@ function CheckoutPage() {
   const { data: store } = useQuery({
     queryKey: ["public-store", slug],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("stores")
-        .select("currency, shipping_fee")
-        .eq("slug", slug)
-        .maybeSingle();
-      return data;
+      const res = await api.get(`/public/stores/${slug}`);
+      return res.data.data;
     },
   });
 

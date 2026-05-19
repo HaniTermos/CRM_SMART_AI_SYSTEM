@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+
 import { useMyStore } from "@/lib/use-my-store";
 import { adjustStock, listInventory } from "@/lib/inventory.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,13 +36,11 @@ type Reason = "manual" | "restock" | "correction" | "damage" | "return";
 function InventoryPage() {
   const { data: store } = useMyStore();
   const qc = useQueryClient();
-  const listFn = useServerFn(listInventory);
-  const adjustFn = useServerFn(adjustStock);
 
   const { data, isLoading } = useQuery({
     queryKey: ["inventory", store?.id],
     enabled: !!store?.id,
-    queryFn: () => listFn({ data: { storeId: store!.id } }),
+    queryFn: () => listInventory({ data: { storeId: store!.id } }),
   });
 
   const adjust = useMutation({
@@ -52,7 +50,7 @@ function InventoryPage() {
       reason: Reason;
       note: string;
     }) =>
-      adjustFn({
+      adjustStock({
         data: {
           storeId: store!.id,
           productId: input.productId,

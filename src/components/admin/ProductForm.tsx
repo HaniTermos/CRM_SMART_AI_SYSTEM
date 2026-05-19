@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useMyStore } from "@/lib/use-my-store";
 import { slugify } from "@/lib/slugify";
 import { Button } from "@/components/ui/button";
@@ -52,15 +52,10 @@ export function ProductForm({ productId }: ProductFormProps) {
   // Load existing product (edit mode)
   const { data: existing } = useQuery({
     queryKey: ["product", productId],
-    enabled: !!productId,
+    enabled: !!productId && !!store,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", productId!)
-        .single();
-      if (error) throw error;
-      return data;
+      const res = await api.get(`/products/${store!.id}/${productId}`);
+      return res.data.data;
     },
   });
 
@@ -81,13 +76,8 @@ export function ProductForm({ productId }: ProductFormProps) {
     queryKey: ["categories", store?.id],
     enabled: !!store?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("id, name")
-        .eq("store_id", store!.id)
-        .order("name");
-      if (error) throw error;
-      return data ?? [];
+      const res = await api.get(`/categories/${store!.id}`);
+      return res.data.data;
     },
   });
 
@@ -117,11 +107,9 @@ export function ProductForm({ productId }: ProductFormProps) {
       };
 
       if (productId) {
-        const { error } = await supabase.from("products").update(payload).eq("id", productId);
-        if (error) throw error;
+        await api.put(`/products/${store.id}/${productId}`, payload);
       } else {
-        const { error } = await supabase.from("products").insert(payload);
-        if (error) throw error;
+        await api.post(`/products/${store.id}`, payload);
       }
     },
     onSuccess: () => {
@@ -135,9 +123,8 @@ export function ProductForm({ productId }: ProductFormProps) {
 
   const remove = useMutation({
     mutationFn: async () => {
-      if (!productId) return;
-      const { error } = await supabase.from("products").delete().eq("id", productId);
-      if (error) throw error;
+      if (!productId || !store) return;
+      await api.delete(`/products/${store.id}/${productId}`);
     },
     onSuccess: () => {
       toast.success("Product deleted");
@@ -269,14 +256,12 @@ export function ProductForm({ productId }: ProductFormProps) {
                   }
                   setUploading(true);
                   try {
-                    const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-                    const path = `${store.id}/${crypto.randomUUID()}.${ext}`;
-                    const { error: upErr } = await supabase.storage
-                      .from("product-images")
-                      .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
-                    if (upErr) throw upErr;
-                    const { data: pub } = supabase.storage.from("product-images").getPublicUrl(path);
-                    setImageUrl(pub.publicUrl);
+                    const formData = new FormData();
+                    formData.append("file", file);
+                    const res = await api.post(`/products/${store.id}/upload`, formData, {
+                      headers: { "Content-Type": "multipart/form-data" }
+                    });
+                    setImageUrl(res.data.data.url);
                     toast.success("Image uploaded");
                   } catch (err) {
                     toast.error(err instanceof Error ? err.message : "Upload failed");

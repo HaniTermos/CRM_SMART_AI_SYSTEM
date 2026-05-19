@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useMyStore } from "@/lib/use-my-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,21 +17,8 @@ function Dashboard() {
     queryKey: ["dashboard-counts", store?.id],
     enabled: !!store?.id,
     queryFn: async () => {
-      const [products, categories, orders, customers, revenueRows] = await Promise.all([
-        supabase.from("products").select("id", { count: "exact", head: true }).eq("store_id", store!.id),
-        supabase.from("categories").select("id", { count: "exact", head: true }).eq("store_id", store!.id),
-        supabase.from("orders").select("id", { count: "exact", head: true }).eq("store_id", store!.id),
-        supabase.from("customers").select("id", { count: "exact", head: true }).eq("store_id", store!.id),
-        supabase.from("orders").select("total").eq("store_id", store!.id).neq("status", "cancelled"),
-      ]);
-      const revenue = (revenueRows.data ?? []).reduce((s, r) => s + Number(r.total), 0);
-      return {
-        products: products.count ?? 0,
-        categories: categories.count ?? 0,
-        orders: orders.count ?? 0,
-        customers: customers.count ?? 0,
-        revenue,
-      };
+      const res = await api.get(`/reports/${store!.id}/dashboard`);
+      return res.data.data;
     },
   });
 

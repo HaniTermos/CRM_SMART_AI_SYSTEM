@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -75,16 +75,20 @@ function SignInCard() {
       return;
     }
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: parsed.data.email,
-      password: parsed.data.password,
-    });
-    setBusy(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const res = await api.post('/auth/login', {
+        email: parsed.data.email,
+        password: parsed.data.password,
+      });
+      localStorage.setItem('smartstore_token', res.data.data.token);
+      toast.success("Welcome back");
+      // Force reload to trigger AuthContext re-fetch
+      window.location.href = "/dashboard";
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Login failed");
+    } finally {
+      setBusy(false);
     }
-    toast.success("Welcome back");
   }
 
   return (
@@ -142,21 +146,21 @@ function SignUpCard() {
       return;
     }
     setBusy(true);
-    const redirectUrl = `${window.location.origin}/dashboard`;
-    const { error } = await supabase.auth.signUp({
-      email: parsed.data.email,
-      password: parsed.data.password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: { name: parsed.data.name },
-      },
-    });
-    setBusy(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    
+    try {
+      const res = await api.post('/auth/register', {
+        email: parsed.data.email,
+        password: parsed.data.password,
+        name: parsed.data.name,
+      });
+      localStorage.setItem('smartstore_token', res.data.data.token);
+      toast.success("Account created successfully.");
+      window.location.href = "/dashboard";
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Sign up failed");
+    } finally {
+      setBusy(false);
     }
-    toast.success("Account created — check your email to confirm, then sign in.");
   }
 
   return (

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useMyStore } from "@/lib/use-my-store";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,18 +17,8 @@ function AiPage() {
     queryKey: ["ai-reengagement", store?.id],
     enabled: !!store?.id,
     queryFn: async () => {
-      const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-      const { data, error } = await supabase
-        .from("customers")
-        .select("id, name, phone, email, segment, total_orders, total_spent, last_order_at")
-        .eq("store_id", store!.id)
-        .lt("last_order_at", cutoff)
-        .neq("segment", "churned")
-        .gte("total_orders", 1)
-        .order("total_spent", { ascending: false })
-        .limit(20);
-      if (error) throw error;
-      return data ?? [];
+      const res = await api.get(`/ai/${store!.id}/reengagement`);
+      return res.data.data;
     },
   });
 
@@ -36,14 +26,8 @@ function AiPage() {
     queryKey: ["ai-recent-insights", store?.id],
     enabled: !!store?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ai_insights")
-        .select("id, customer_id, summary, next_action, created_at")
-        .eq("store_id", store!.id)
-        .order("created_at", { ascending: false })
-        .limit(10);
-      if (error) throw error;
-      return data ?? [];
+      const res = await api.get(`/ai/${store!.id}/recent-insights`);
+      return res.data.data;
     },
   });
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+
 import { useMyStore } from "@/lib/use-my-store";
 import {
   listDiscounts,
@@ -32,15 +32,11 @@ export const Route = createFileRoute("/_admin/discounts")({
 function DiscountsPage() {
   const { data: store } = useMyStore();
   const qc = useQueryClient();
-  const listFn = useServerFn(listDiscounts);
-  const createFn = useServerFn(createDiscount);
-  const toggleFn = useServerFn(toggleDiscount);
-  const deleteFn = useServerFn(deleteDiscount);
 
   const { data: codes = [], isLoading } = useQuery({
     queryKey: ["discounts", store?.id],
     enabled: !!store?.id,
-    queryFn: () => listFn({ data: { storeId: store!.id } }),
+    queryFn: () => listDiscounts({ data: { storeId: store!.id } }),
   });
 
   const [code, setCode] = useState("");
@@ -52,7 +48,7 @@ function DiscountsPage() {
 
   const create = useMutation({
     mutationFn: () =>
-      createFn({
+      createDiscount({
         data: {
           storeId: store!.id,
           code: code.toUpperCase().trim(),
@@ -77,14 +73,14 @@ function DiscountsPage() {
 
   const toggle = useMutation({
     mutationFn: (input: { id: string; active: boolean }) =>
-      toggleFn({ data: { storeId: store!.id, ...input } }),
+      toggleDiscount({ data: { storeId: store!.id, ...input } }),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: ["discounts", store?.id] }),
   });
 
   const remove = useMutation({
     mutationFn: (id: string) =>
-      deleteFn({ data: { storeId: store!.id, id } }),
+      deleteDiscount({ data: { storeId: store!.id, id } }),
     onSuccess: () => {
       toast.success("Deleted");
       qc.invalidateQueries({ queryKey: ["discounts", store?.id] });

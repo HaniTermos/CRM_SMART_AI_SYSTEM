@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useMyStore } from "@/lib/use-my-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,15 +26,8 @@ function ReportsPage() {
     queryKey: ["reports-orders", store?.id],
     enabled: !!store?.id,
     queryFn: async () => {
-      const sinceIso = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
-      const { data, error } = await supabase
-        .from("orders")
-        .select("id, total, status, created_at, order_items(product_name, quantity, unit_price)")
-        .eq("store_id", store!.id)
-        .gte("created_at", sinceIso)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      return (data ?? []) as OrderRow[];
+      const res = await api.get(`/reports/${store!.id}/orders-with-items`);
+      return res.data.data;
     },
   });
 
@@ -42,12 +35,8 @@ function ReportsPage() {
     queryKey: ["reports-segments", store?.id],
     enabled: !!store?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("customers")
-        .select("segment")
-        .eq("store_id", store!.id);
-      if (error) throw error;
-      return data ?? [];
+      const res = await api.get(`/reports/${store!.id}/segments`);
+      return res.data.data;
     },
   });
 

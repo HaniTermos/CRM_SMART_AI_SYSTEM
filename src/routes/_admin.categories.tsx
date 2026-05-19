@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useMyStore } from "@/lib/use-my-store";
 import { slugify } from "@/lib/slugify";
 import { Button } from "@/components/ui/button";
@@ -31,13 +31,8 @@ function CategoriesPage() {
     queryKey: ["categories", store?.id],
     enabled: !!store?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("id, name, slug")
-        .eq("store_id", store!.id)
-        .order("name");
-      if (error) throw error;
-      return data ?? [];
+      const res = await api.get(`/categories/${store!.id}`);
+      return res.data.data;
     },
   });
 
@@ -45,10 +40,7 @@ function CategoriesPage() {
     mutationFn: async () => {
       if (!store) throw new Error("No store");
       const parsed = schema.parse({ name, slug });
-      const { error } = await supabase
-        .from("categories")
-        .insert({ store_id: store.id, name: parsed.name, slug: parsed.slug });
-      if (error) throw error;
+      await api.post(`/categories/${store.id}`, parsed);
     },
     onSuccess: () => {
       toast.success("Category added");
@@ -61,8 +53,7 @@ function CategoriesPage() {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("categories").delete().eq("id", id);
-      if (error) throw error;
+      await api.delete(`/categories/${store!.id}/${id}`);
     },
     onSuccess: () => {
       toast.success("Category deleted");

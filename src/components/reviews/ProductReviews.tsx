@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { supabase } from "@/integrations/supabase/client";
+
+import { api } from "@/lib/api";
 import { submitReview } from "@/lib/reviews.functions";
 import { StarRating, StarPicker } from "@/components/reviews/Stars";
 import { Button } from "@/components/ui/button";
@@ -19,19 +19,12 @@ export function ProductReviews({
   productId: string;
 }) {
   const qc = useQueryClient();
-  const submitFn = useServerFn(submitReview);
 
   const { data: reviews = [] } = useQuery({
     queryKey: ["public-reviews", productId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("product_reviews")
-        .select("id, author_name, rating, comment, verified_purchase, created_at")
-        .eq("product_id", productId)
-        .eq("status", "approved")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
+      const res = await api.get(`/public/products/${productId}/reviews`);
+      return res.data.data;
     },
   });
 
@@ -48,15 +41,13 @@ export function ProductReviews({
 
   const submit = useMutation({
     mutationFn: () =>
-      submitFn({
-        data: {
-          storeSlug,
-          productId,
-          authorName: name.trim(),
-          phone: phone.trim() || undefined,
-          rating,
-          comment: comment.trim() || undefined,
-        },
+      submitReview({
+        storeSlug,
+        productId,
+        authorName: name.trim(),
+        phone: phone.trim() || undefined,
+        rating,
+        comment: comment.trim() || undefined,
       }),
     onSuccess: (res) => {
       toast.success(
