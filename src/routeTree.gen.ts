@@ -21,14 +21,16 @@ import { Route as AdminInventoryRouteImport } from './routes/_admin.inventory'
 import { Route as AdminDiscountsRouteImport } from './routes/_admin.discounts'
 import { Route as AdminDemandRouteImport } from './routes/_admin.demand'
 import { Route as AdminDashboardRouteImport } from './routes/_admin.dashboard'
+import { Route as AdminCrmRouteImport } from './routes/_admin.crm'
 import { Route as AdminCategoriesRouteImport } from './routes/_admin.categories'
-import { Route as AdminAlertsRouteImport } from './routes/_admin.alerts'
+import { Route as AdminCampaignsRouteImport } from './routes/_admin.campaigns'
 import { Route as AdminAiRouteImport } from './routes/_admin.ai'
 import { Route as ShopSlugIndexRouteImport } from './routes/shop.$slug.index'
 import { Route as AdminProductsIndexRouteImport } from './routes/_admin.products.index'
 import { Route as AdminOrdersIndexRouteImport } from './routes/_admin.orders.index'
 import { Route as AdminCustomersIndexRouteImport } from './routes/_admin.customers.index'
 import { Route as ShopSlugTrackRouteImport } from './routes/shop.$slug.track'
+import { Route as ShopSlugDealsRouteImport } from './routes/shop.$slug.deals'
 import { Route as ShopSlugCheckoutRouteImport } from './routes/shop.$slug.checkout'
 import { Route as ShopSlugCartRouteImport } from './routes/shop.$slug.cart'
 import { Route as AdminProductsNewRouteImport } from './routes/_admin.products.new'
@@ -97,14 +99,19 @@ const AdminDashboardRoute = AdminDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCrmRoute = AdminCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAlertsRoute = AdminAlertsRouteImport.update({
-  id: '/alerts',
-  path: '/alerts',
+const AdminCampaignsRoute = AdminCampaignsRouteImport.update({
+  id: '/campaigns',
+  path: '/campaigns',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAiRoute = AdminAiRouteImport.update({
@@ -135,6 +142,11 @@ const AdminCustomersIndexRoute = AdminCustomersIndexRouteImport.update({
 const ShopSlugTrackRoute = ShopSlugTrackRouteImport.update({
   id: '/track',
   path: '/track',
+  getParentRoute: () => ShopSlugRoute,
+} as any)
+const ShopSlugDealsRoute = ShopSlugDealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
   getParentRoute: () => ShopSlugRoute,
 } as any)
 const ShopSlugCheckoutRoute = ShopSlugCheckoutRouteImport.update({
@@ -183,8 +195,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/ai': typeof AdminAiRoute
-  '/alerts': typeof AdminAlertsRoute
+  '/campaigns': typeof AdminCampaignsRoute
   '/categories': typeof AdminCategoriesRoute
+  '/crm': typeof AdminCrmRoute
   '/dashboard': typeof AdminDashboardRoute
   '/demand': typeof AdminDemandRoute
   '/discounts': typeof AdminDiscountsRoute
@@ -200,6 +213,7 @@ export interface FileRoutesByFullPath {
   '/products/new': typeof AdminProductsNewRoute
   '/shop/$slug/cart': typeof ShopSlugCartRoute
   '/shop/$slug/checkout': typeof ShopSlugCheckoutRoute
+  '/shop/$slug/deals': typeof ShopSlugDealsRoute
   '/shop/$slug/track': typeof ShopSlugTrackRoute
   '/customers/': typeof AdminCustomersIndexRoute
   '/orders/': typeof AdminOrdersIndexRoute
@@ -212,8 +226,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/ai': typeof AdminAiRoute
-  '/alerts': typeof AdminAlertsRoute
+  '/campaigns': typeof AdminCampaignsRoute
   '/categories': typeof AdminCategoriesRoute
+  '/crm': typeof AdminCrmRoute
   '/dashboard': typeof AdminDashboardRoute
   '/demand': typeof AdminDemandRoute
   '/discounts': typeof AdminDiscountsRoute
@@ -228,6 +243,7 @@ export interface FileRoutesByTo {
   '/products/new': typeof AdminProductsNewRoute
   '/shop/$slug/cart': typeof ShopSlugCartRoute
   '/shop/$slug/checkout': typeof ShopSlugCheckoutRoute
+  '/shop/$slug/deals': typeof ShopSlugDealsRoute
   '/shop/$slug/track': typeof ShopSlugTrackRoute
   '/customers': typeof AdminCustomersIndexRoute
   '/orders': typeof AdminOrdersIndexRoute
@@ -242,8 +258,9 @@ export interface FileRoutesById {
   '/_admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/_admin/ai': typeof AdminAiRoute
-  '/_admin/alerts': typeof AdminAlertsRoute
+  '/_admin/campaigns': typeof AdminCampaignsRoute
   '/_admin/categories': typeof AdminCategoriesRoute
+  '/_admin/crm': typeof AdminCrmRoute
   '/_admin/dashboard': typeof AdminDashboardRoute
   '/_admin/demand': typeof AdminDemandRoute
   '/_admin/discounts': typeof AdminDiscountsRoute
@@ -259,6 +276,7 @@ export interface FileRoutesById {
   '/_admin/products/new': typeof AdminProductsNewRoute
   '/shop/$slug/cart': typeof ShopSlugCartRoute
   '/shop/$slug/checkout': typeof ShopSlugCheckoutRoute
+  '/shop/$slug/deals': typeof ShopSlugDealsRoute
   '/shop/$slug/track': typeof ShopSlugTrackRoute
   '/_admin/customers/': typeof AdminCustomersIndexRoute
   '/_admin/orders/': typeof AdminOrdersIndexRoute
@@ -273,8 +291,9 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/ai'
-    | '/alerts'
+    | '/campaigns'
     | '/categories'
+    | '/crm'
     | '/dashboard'
     | '/demand'
     | '/discounts'
@@ -290,6 +309,7 @@ export interface FileRouteTypes {
     | '/products/new'
     | '/shop/$slug/cart'
     | '/shop/$slug/checkout'
+    | '/shop/$slug/deals'
     | '/shop/$slug/track'
     | '/customers/'
     | '/orders/'
@@ -302,8 +322,9 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/ai'
-    | '/alerts'
+    | '/campaigns'
     | '/categories'
+    | '/crm'
     | '/dashboard'
     | '/demand'
     | '/discounts'
@@ -318,6 +339,7 @@ export interface FileRouteTypes {
     | '/products/new'
     | '/shop/$slug/cart'
     | '/shop/$slug/checkout'
+    | '/shop/$slug/deals'
     | '/shop/$slug/track'
     | '/customers'
     | '/orders'
@@ -331,8 +353,9 @@ export interface FileRouteTypes {
     | '/_admin'
     | '/login'
     | '/_admin/ai'
-    | '/_admin/alerts'
+    | '/_admin/campaigns'
     | '/_admin/categories'
+    | '/_admin/crm'
     | '/_admin/dashboard'
     | '/_admin/demand'
     | '/_admin/discounts'
@@ -348,6 +371,7 @@ export interface FileRouteTypes {
     | '/_admin/products/new'
     | '/shop/$slug/cart'
     | '/shop/$slug/checkout'
+    | '/shop/$slug/deals'
     | '/shop/$slug/track'
     | '/_admin/customers/'
     | '/_admin/orders/'
@@ -450,6 +474,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/crm': {
+      id: '/_admin/crm'
+      path: '/crm'
+      fullPath: '/crm'
+      preLoaderRoute: typeof AdminCrmRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/categories': {
       id: '/_admin/categories'
       path: '/categories'
@@ -457,11 +488,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCategoriesRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/_admin/alerts': {
-      id: '/_admin/alerts'
-      path: '/alerts'
-      fullPath: '/alerts'
-      preLoaderRoute: typeof AdminAlertsRouteImport
+    '/_admin/campaigns': {
+      id: '/_admin/campaigns'
+      path: '/campaigns'
+      fullPath: '/campaigns'
+      preLoaderRoute: typeof AdminCampaignsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/ai': {
@@ -504,6 +535,13 @@ declare module '@tanstack/react-router' {
       path: '/track'
       fullPath: '/shop/$slug/track'
       preLoaderRoute: typeof ShopSlugTrackRouteImport
+      parentRoute: typeof ShopSlugRoute
+    }
+    '/shop/$slug/deals': {
+      id: '/shop/$slug/deals'
+      path: '/deals'
+      fullPath: '/shop/$slug/deals'
+      preLoaderRoute: typeof ShopSlugDealsRouteImport
       parentRoute: typeof ShopSlugRoute
     }
     '/shop/$slug/checkout': {
@@ -567,8 +605,9 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminAiRoute: typeof AdminAiRoute
-  AdminAlertsRoute: typeof AdminAlertsRoute
+  AdminCampaignsRoute: typeof AdminCampaignsRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
+  AdminCrmRoute: typeof AdminCrmRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminDemandRoute: typeof AdminDemandRoute
   AdminDiscountsRoute: typeof AdminDiscountsRoute
@@ -588,8 +627,9 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAiRoute: AdminAiRoute,
-  AdminAlertsRoute: AdminAlertsRoute,
+  AdminCampaignsRoute: AdminCampaignsRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
+  AdminCrmRoute: AdminCrmRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminDemandRoute: AdminDemandRoute,
   AdminDiscountsRoute: AdminDiscountsRoute,
@@ -612,6 +652,7 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 interface ShopSlugRouteChildren {
   ShopSlugCartRoute: typeof ShopSlugCartRoute
   ShopSlugCheckoutRoute: typeof ShopSlugCheckoutRoute
+  ShopSlugDealsRoute: typeof ShopSlugDealsRoute
   ShopSlugTrackRoute: typeof ShopSlugTrackRoute
   ShopSlugIndexRoute: typeof ShopSlugIndexRoute
   ShopSlugPProductSlugRoute: typeof ShopSlugPProductSlugRoute
@@ -621,6 +662,7 @@ interface ShopSlugRouteChildren {
 const ShopSlugRouteChildren: ShopSlugRouteChildren = {
   ShopSlugCartRoute: ShopSlugCartRoute,
   ShopSlugCheckoutRoute: ShopSlugCheckoutRoute,
+  ShopSlugDealsRoute: ShopSlugDealsRoute,
   ShopSlugTrackRoute: ShopSlugTrackRoute,
   ShopSlugIndexRoute: ShopSlugIndexRoute,
   ShopSlugPProductSlugRoute: ShopSlugPProductSlugRoute,

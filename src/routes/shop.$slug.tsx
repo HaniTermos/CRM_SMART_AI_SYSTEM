@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, Link, useParams } from "@tanstack/react-router
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { CartProvider, useCart } from "@/lib/cart-context";
-import { ShoppingBag, ShoppingCart, PackageSearch } from "lucide-react";
+import { ShoppingBag, ShoppingCart, PackageSearch, Tag } from "lucide-react";
 
 export const Route = createFileRoute("/shop/$slug")({
   component: ShopLayout,
@@ -47,6 +47,14 @@ function ShopShell({ slug }: { slug: string }) {
             {store.name}
           </Link>
           <div className="flex items-center gap-2">
+            <Link
+              to="/shop/$slug/deals"
+              params={{ slug }}
+              className="hidden items-center gap-1.5 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground sm:inline-flex"
+            >
+              <Tag className="h-4 w-4" />
+              My Deals
+            </Link>
             <Link
               to="/shop/$slug/track"
               params={{ slug }}

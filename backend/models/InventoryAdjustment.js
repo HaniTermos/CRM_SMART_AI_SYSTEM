@@ -2,12 +2,8 @@ const db = require('../config/database');
 const Product = require('./Product');
 
 class InventoryAdjustment {
-  /**
-   * Logs an adjustment and updates the product stock transactionally.
-   */
   static async create({ store_id, product_id, delta, reason, note, created_by }) {
     return db.transaction(async (client) => {
-      // 1. Create the adjustment log
       const adjResult = await client.query(
         `INSERT INTO inventory_adjustments (store_id, product_id, delta, reason, note, created_by) 
          VALUES ($1, $2, $3, $4, $5, $6) 
@@ -16,8 +12,7 @@ class InventoryAdjustment {
       );
       
       const adjustment = adjResult.rows[0];
-
-      // 2. Update the product stock
+      
       await client.query(
         `UPDATE products SET stock = stock + $1 WHERE id = $2`,
         [delta, product_id]

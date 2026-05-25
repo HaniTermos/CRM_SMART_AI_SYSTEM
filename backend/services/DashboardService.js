@@ -1,11 +1,7 @@
 const db = require('../config/database');
 
 class DashboardService {
-  /**
-   * Generates the metrics dashboard data matching the TanStack/Supabase frontend expectations
-   */
   static async getMetrics(storeId) {
-    // 1. Total Revenue
     const revenueResult = await db.query(
       `SELECT SUM(total) as revenue 
        FROM orders 
@@ -14,7 +10,6 @@ class DashboardService {
     );
     const revenue = parseFloat(revenueResult.rows[0].revenue || 0);
 
-    // 2. Active Orders
     const ordersResult = await db.query(
       `SELECT COUNT(*) as count 
        FROM orders 
@@ -23,7 +18,30 @@ class DashboardService {
     );
     const activeOrders = parseInt(ordersResult.rows[0].count || 0);
 
-    // 3. Low Stock Alerts
+    const totalOrdersResult = await db.query(
+      `SELECT COUNT(*) as count 
+       FROM orders 
+       WHERE store_id = $1`,
+      [storeId]
+    );
+    const totalOrders = parseInt(totalOrdersResult.rows[0].count || 0);
+
+    const productsResult = await db.query(
+      `SELECT COUNT(*) as count 
+       FROM products 
+       WHERE store_id = $1`,
+      [storeId]
+    );
+    const totalProducts = parseInt(productsResult.rows[0].count || 0);
+
+    const categoriesResult = await db.query(
+      `SELECT COUNT(*) as count 
+       FROM categories 
+       WHERE store_id = $1`,
+      [storeId]
+    );
+    const totalCategories = parseInt(categoriesResult.rows[0].count || 0);
+
     const stockResult = await db.query(
       `SELECT COUNT(*) as count 
        FROM products 
@@ -32,7 +50,6 @@ class DashboardService {
     );
     const lowStockAlerts = parseInt(stockResult.rows[0].count || 0);
 
-    // 4. Total Customers
     const customersResult = await db.query(
       `SELECT COUNT(*) as count 
        FROM customers 
@@ -41,7 +58,6 @@ class DashboardService {
     );
     const totalCustomers = parseInt(customersResult.rows[0].count || 0);
 
-    // 5. Recent Orders List
     const recentOrdersResult = await db.query(
       `SELECT o.id, o.order_number, o.total, o.status, o.created_at, c.name as customer_name 
        FROM orders o
@@ -57,7 +73,12 @@ class DashboardService {
       activeOrders,
       lowStockAlerts,
       totalCustomers,
-      recentOrders: recentOrdersResult.rows
+      recentOrders: recentOrdersResult.rows,
+      // Fields expected by the frontend KPI cards
+      products: totalProducts,
+      categories: totalCategories,
+      orders: totalOrders,
+      customers: totalCustomers,
     };
   }
 }

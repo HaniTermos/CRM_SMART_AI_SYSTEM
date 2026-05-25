@@ -19,7 +19,6 @@ export const adjustStock = async ({ data }: { data: {
 };
 
 export const listInventory = async ({ data }: { data: { storeId: string } }) => {
-  // Fetch both products and inventory adjustments using standard REST endpoints
   const [productsRes, adjustmentsRes] = await Promise.all([
     api.get(`/products/${data.storeId}`),
     api.get(`/inventory/${data.storeId}`)

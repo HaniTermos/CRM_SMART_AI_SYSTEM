@@ -2,11 +2,8 @@ const db = require('../config/database');
 
 class ProductReview {
   static async create({ store_id, product_id, customer_phone, author_name, rating, comment }) {
-    // Check if it's a verified purchase
     let verified = false;
     if (customer_phone) {
-      // Logic from SmartStore-AI reviews.functions.ts:
-      // Match phone to a customer, then see if they ordered this product
       const result = await db.query(
         `SELECT EXISTS (
           SELECT 1 FROM orders o
@@ -16,7 +13,7 @@ class ProductReview {
           AND o.store_id = $2
           AND oi.product_id = $3
         ) as verified`,
-        [customer_phone.slice(-4), store_id, product_id] // check last 4 digits
+        [customer_phone.slice(-4), store_id, product_id]
       );
       verified = result.rows[0]?.verified || false;
     }

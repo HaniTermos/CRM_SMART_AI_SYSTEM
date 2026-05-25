@@ -2,14 +2,12 @@ const db = require('../config/database');
 
 class UserRole {
   static async addMember({ store_id, email, role }) {
-    // Look up user by email
     const userResult = await db.query('SELECT id FROM users WHERE email = $1', [email]);
     if (userResult.rows.length === 0) {
       throw new Error('User not found. They must register first.');
     }
     const userId = userResult.rows[0].id;
 
-    // Insert role
     try {
       const result = await db.query(
         `INSERT INTO user_roles (user_id, store_id, role) 
@@ -27,7 +25,6 @@ class UserRole {
   }
 
   static async removeMember(storeId, userId) {
-    // Prevent removing the owner
     const roleCheck = await db.query(
       'SELECT role FROM user_roles WHERE store_id = $1 AND user_id = $2',
       [storeId, userId]

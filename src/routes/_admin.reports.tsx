@@ -48,12 +48,13 @@ function ReportsPage() {
     // Daily revenue (last 30 days)
     const days: { date: string; revenue: number; orders: number }[] = [];
     for (let i = 29; i >= 0; i--) {
-      const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
-      days.push({ date: d.toISOString().slice(0, 10), revenue: 0, orders: 0 });
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push({ date: toLocalDateStr(d), revenue: 0, orders: 0 });
     }
     const idx = new Map(days.map((d, i) => [d.date, i] as const));
     for (const o of paid) {
-      const key = new Date(o.created_at).toISOString().slice(0, 10);
+      const key = toLocalDateStr(new Date(o.created_at));
       const i = idx.get(key);
       if (i != null) {
         days[i].revenue += Number(o.total);
@@ -178,6 +179,13 @@ function ReportsPage() {
       </div>
     </div>
   );
+}
+
+function toLocalDateStr(d: Date) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function Kpi({ label, value }: { label: string; value: number | string }) {

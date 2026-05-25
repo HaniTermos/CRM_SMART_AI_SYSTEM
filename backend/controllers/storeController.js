@@ -48,7 +48,6 @@ exports.myStores = async (req, res, next) => {
 
 exports.getById = async (req, res, next) => {
   try {
-    // req.store is populated by requireStoreAccess middleware
     res.json({ success: true, data: req.store });
   } catch (error) {
     next(error);
@@ -61,7 +60,6 @@ exports.getBySlug = async (req, res, next) => {
     if (!store) {
       return res.status(404).json({ error: 'Store not found' });
     }
-    // Public endpoint for storefront, return safe fields only
     const safeStore = {
       id: store.id,
       name: store.name,
@@ -81,7 +79,6 @@ exports.update = [
   validate,
   async (req, res, next) => {
     try {
-      // req.store is populated by requireStoreAdmin middleware
       const updatedStore = await Store.update(req.store.id, req.body);
       res.json({ success: true, data: updatedStore });
     } catch (error) {
@@ -92,7 +89,6 @@ exports.update = [
 
 exports.delete = async (req, res, next) => {
   try {
-    // We only allow the actual owner to delete a store
     if (req.userRole !== 'owner') {
       return res.status(403).json({ error: 'Only the store owner can delete the store' });
     }

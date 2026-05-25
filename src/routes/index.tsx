@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, Sparkles, Users, BarChart3 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -17,6 +18,9 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const { user, loading } = useAuth();
+  const isLoggedIn = !loading && !!user;
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
@@ -26,12 +30,32 @@ function Landing() {
             Mini AI CRM
           </Link>
           <nav className="flex items-center gap-3">
-            <Link to="/login">
-              <Button variant="ghost" size="sm">Sign in</Button>
-            </Link>
-            <Link to="/login">
-              <Button size="sm">Get started</Button>
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link to="/dashboard">
+                  <Button variant="ghost" size="sm">Dashboard</Button>
+                </Link>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    localStorage.removeItem('smartstore_token');
+                    window.location.href = "/login";
+                  }}
+                >
+                  Sign out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" size="sm">Sign in</Button>
+                </Link>
+                <Link to="/login">
+                  <Button size="sm">Get started</Button>
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       </header>
@@ -46,9 +70,15 @@ function Landing() {
             personalized follow-ups — all in one tool built for small businesses.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-3">
-            <Link to="/login">
-              <Button size="lg">Create your store</Button>
-            </Link>
+            {isLoggedIn ? (
+              <Link to="/dashboard">
+                <Button size="lg">Go to dashboard</Button>
+              </Link>
+            ) : (
+              <Link to="/login">
+                <Button size="lg">Create your store</Button>
+              </Link>
+            )}
           </div>
         </section>
 

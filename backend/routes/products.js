@@ -6,13 +6,11 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Configure multer for local file storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const storeId = req.params.storeId;
     const dir = path.join(__dirname, '..', 'uploads', storeId);
     
-    // Create directory if it doesn't exist
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
@@ -36,20 +34,13 @@ const upload = multer({
   }
 });
 
-// Public routes (mounted under /api/products/:storeId)
 router.get('/', productController.getAll);
 router.get('/:id', productController.getById);
 router.get('/slug/:slug', productController.getBySlug);
-
-// Protected routes
 router.use(authenticate);
-
-// Admin-only routes
 router.post('/', requireStoreAdmin, productController.create);
 router.put('/:id', requireStoreAdmin, productController.update);
 router.delete('/:id', requireStoreAdmin, productController.delete);
-
-// Image upload
 router.post(
   '/upload', 
   requireStoreAdmin, 

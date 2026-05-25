@@ -2,10 +2,6 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 
-/**
- * GET /api/health
- * Returns server and database connection status.
- */
 router.get('/', async (req, res) => {
   try {
     const dbStart = Date.now();

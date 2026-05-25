@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -27,11 +27,11 @@ const nameSchema = z.string().trim().min(1, "Name is required").max(80);
 
 function LoginPage() {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!loading && user) navigate({ to: "/dashboard" });
-  }, [user, loading, navigate]);
+  // Show an "already signed in" state instead of silently redirecting
+  if (!loading && user) {
+    return <AlreadySignedIn />;
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-12">
@@ -59,6 +59,43 @@ function LoginPage() {
   );
 }
 
+function AlreadySignedIn() {
+  const navigate = useNavigate();
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-12">
+      <div className="w-full max-w-md">
+        <Link to="/" className="mb-6 flex items-center justify-center gap-2 text-sm font-semibold">
+          <Sparkles className="h-4 w-4 text-primary" />
+          Mini AI CRM
+        </Link>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Already signed in</CardTitle>
+            <CardDescription>You are currently logged in to your account.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button className="w-full" onClick={() => navigate({ to: "/dashboard" })}>
+              Go to dashboard
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                localStorage.removeItem('smartstore_token');
+                window.location.href = "/login";
+              }}
+            >
+              Sign out
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
 function SignInCard() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -80,9 +117,13 @@ function SignInCard() {
         email: parsed.data.email,
         password: parsed.data.password,
       });
-      localStorage.setItem('smartstore_token', res.data.data.token);
+      const token = res.data?.data?.token;
+      if (!token || typeof token !== 'string') {
+        toast.error("Invalid response from server. Please try again.");
+        return;
+      }
+      localStorage.setItem('smartstore_token', token);
       toast.success("Welcome back");
-      // Force reload to trigger AuthContext re-fetch
       window.location.href = "/dashboard";
     } catch (err: any) {
       toast.error(err.response?.data?.error || "Login failed");
@@ -153,7 +194,12 @@ function SignUpCard() {
         password: parsed.data.password,
         name: parsed.data.name,
       });
-      localStorage.setItem('smartstore_token', res.data.data.token);
+      const token = res.data?.data?.token;
+      if (!token || typeof token !== 'string') {
+        toast.error("Invalid response from server. Please try again.");
+        return;
+      }
+      localStorage.setItem('smartstore_token', token);
       toast.success("Account created successfully.");
       window.location.href = "/dashboard";
     } catch (err: any) {

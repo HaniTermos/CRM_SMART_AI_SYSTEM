@@ -8,7 +8,7 @@ export type Alert = {
   title: string;
   detail: string;
   href: string;
-  createdAt: string; // ISO
+  createdAt: string;
 };
 
 const LOW_STOCK_THRESHOLD = 5;

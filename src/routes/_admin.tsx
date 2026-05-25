@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Outlet, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
 import { useMyStore } from "@/lib/use-my-store";
-import { useAlerts, getReadIds } from "@/lib/use-alerts";
 // supabase import removed
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,8 +18,9 @@ import {
   TicketPercent,
   Star,
   Settings,
-  Bell,
   LogOut,
+  Kanban,
+  Mail,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_admin")({
@@ -83,8 +83,9 @@ function AdminLayout() {
           <NavItem to="/demand" icon={<Lightbulb className="h-4 w-4" />} label="Demand scoring" />
           <NavItem to="/discounts" icon={<TicketPercent className="h-4 w-4" />} label="Discounts" />
           <NavItem to="/reviews" icon={<Star className="h-4 w-4" />} label="Reviews" />
+          <NavItem to="/crm" icon={<Kanban className="h-4 w-4" />} label="Pipeline CRM" />
+          <NavItem to="/campaigns" icon={<Mail className="h-4 w-4" />} label="Email Campaign" />
           <NavItem to="/settings" icon={<Settings className="h-4 w-4" />} label="Settings" />
-          <AlertsNavItem />
         </nav>
         <div className="border-t p-3">
           <Button
@@ -141,32 +142,4 @@ function NavItem({
   );
 }
 
-function AlertsNavItem() {
-  const { data: store } = useMyStore();
-  const { data: alerts = [] } = useAlerts();
-  const [readIds, setReadIdsState] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (!store?.id) return;
-    setReadIdsState(getReadIds(store.id));
-    const onChange = () => setReadIdsState(getReadIds(store.id));
-    window.addEventListener("alerts-read-changed", onChange);
-    return () => window.removeEventListener("alerts-read-changed", onChange);
-  }, [store?.id]);
-
-  const unread = alerts.filter((a) => !readIds.has(a.id)).length;
-
-  return (
-    <Link
-      to="/alerts"
-      className="flex items-center gap-2 rounded-md px-3 py-2 text-foreground transition-colors hover:bg-accent"
-      activeProps={{ className: "flex items-center gap-2 rounded-md px-3 py-2 bg-accent font-medium" }}
-    >
-      <Bell className="h-4 w-4" />
-      <span>Alerts</span>
-      {unread > 0 ? (
-        <Badge className="ml-auto h-5 min-w-5 justify-center px-1.5 text-[10px]">{unread}</Badge>
-      ) : null}
-    </Link>
-  );
-}

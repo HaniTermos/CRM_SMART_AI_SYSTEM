@@ -139,18 +139,18 @@ function OrderDetails({ result }: { result: Extract<LookupResult, { ok: true }> 
             </div>
           ))}
           <div className="space-y-1 border-t pt-2">
-            <Row label="Subtotal" value={`${store.currency} ${order.subtotal.toFixed(2)}`} />
-            {order.discount_amount > 0 ? (
+            <Row label="Subtotal" value={`${store.currency} ${Number(order.subtotal).toFixed(2)}`} />
+            {Number(order.discount_amount) > 0 ? (
               <Row
                 label={`Discount${order.discount_code ? ` (${order.discount_code})` : ""}`}
-                value={`−${store.currency} ${order.discount_amount.toFixed(2)}`}
+                value={`−${store.currency} ${Number(order.discount_amount).toFixed(2)}`}
                 tone="positive"
               />
             ) : null}
-            <Row label="Shipping" value={`${store.currency} ${order.shipping_fee.toFixed(2)}`} />
+            <Row label="Shipping" value={`${store.currency} ${Number(order.shipping_fee).toFixed(2)}`} />
             <Row
               label="Total"
-              value={`${store.currency} ${order.total.toFixed(2)}`}
+              value={`${store.currency} ${Number(order.total).toFixed(2)}`}
               bold
             />
           </div>

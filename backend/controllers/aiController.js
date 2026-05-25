@@ -9,7 +9,6 @@ exports.generateInsight = async (req, res, next) => {
     const storeId = req.params.storeId;
     const customerId = req.params.customerId;
 
-    // 1. Fetch context
     const customer = await Customer.findById(customerId);
     if (!customer || customer.store_id !== storeId) {
       return res.status(404).json({ error: 'Customer not found' });
@@ -20,10 +19,8 @@ exports.generateInsight = async (req, res, next) => {
       [customerId]
     );
 
-    // 2. Generate insight via AI service
     const insightData = await AiService.generateInsight(req.store, customer, ordersResult.rows);
 
-    // 3. Save to database
     const savedInsight = await AiInsight.create({
       store_id: storeId,
       customer_id: customerId,

@@ -31,7 +31,7 @@ const schema = z.object({
 });
 
 export type ProductFormProps = {
-  productId?: string; // omit for create
+  productId?: string;
 };
 
 export function ProductForm({ productId }: ProductFormProps) {
@@ -49,7 +49,6 @@ export function ProductForm({ productId }: ProductFormProps) {
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  // Load existing product (edit mode)
   const { data: existing } = useQuery({
     queryKey: ["product", productId],
     enabled: !!productId && !!store,
@@ -70,8 +69,7 @@ export function ProductForm({ productId }: ProductFormProps) {
     setStatus(existing.status);
     setCategoryId(existing.category_id);
   }, [existing]);
-
-  // Categories for select
+  
   const { data: categories = [] } = useQuery({
     queryKey: ["categories", store?.id],
     enabled: !!store?.id,

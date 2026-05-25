@@ -1,7 +1,6 @@
 import { api } from "./api";
 
 export const submitReview = async ({ data }: { data: any }) => {
-  // Storefront review submission uses the slug, so the backend can resolve the store.
   const res = await api.post(`/reviews/${data.storeSlug}/submit`, data);
   return { ok: true, verified: res.data.data.verified };
 };

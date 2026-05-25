@@ -42,12 +42,14 @@ export function ProductReviews({
   const submit = useMutation({
     mutationFn: () =>
       submitReview({
-        storeSlug,
-        productId,
-        authorName: name.trim(),
-        phone: phone.trim() || undefined,
-        rating,
-        comment: comment.trim() || undefined,
+        data: {
+          storeSlug,
+          productId,
+          authorName: name.trim(),
+          phone: phone.trim() || undefined,
+          rating,
+          comment: comment.trim() || undefined,
+        },
       }),
     onSuccess: (res) => {
       toast.success(

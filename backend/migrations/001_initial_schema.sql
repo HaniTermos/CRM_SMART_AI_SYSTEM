@@ -1,4 +1,3 @@
--- ============ ENUMS ============
 CREATE TYPE public.app_role AS ENUM ('owner', 'admin', 'staff');
 CREATE TYPE public.product_status AS ENUM ('draft', 'active', 'archived');
 CREATE TYPE public.order_status AS ENUM ('pending','confirmed','shipped','delivered','cancelled');
@@ -6,7 +5,6 @@ CREATE TYPE public.customer_segment AS ENUM ('new','active','vip','at_risk','chu
 CREATE TYPE public.discount_type AS ENUM ('percent', 'fixed');
 CREATE TYPE public.review_status AS ENUM ('pending', 'approved', 'hidden');
 
--- ============ USERS (Local Auth) ============
 CREATE TABLE public.users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   email text NOT NULL UNIQUE,
@@ -17,7 +15,6 @@ CREATE TABLE public.users (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
--- ============ STORES ============
 CREATE TABLE public.stores (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_user_id uuid NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
@@ -31,7 +28,6 @@ CREATE TABLE public.stores (
 );
 CREATE INDEX stores_owner_idx ON public.stores(owner_user_id);
 
--- ============ USER ROLES (Multi-tenant security) ============
 CREATE TABLE public.user_roles (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
@@ -43,7 +39,6 @@ CREATE TABLE public.user_roles (
 CREATE INDEX user_roles_user_idx ON public.user_roles(user_id);
 CREATE INDEX user_roles_store_idx ON public.user_roles(store_id);
 
--- ============ CATEGORIES ============
 CREATE TABLE public.categories (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   store_id uuid NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
@@ -55,7 +50,6 @@ CREATE TABLE public.categories (
 );
 CREATE INDEX categories_store_idx ON public.categories(store_id);
 
--- ============ PRODUCTS ============
 CREATE TABLE public.products (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   store_id uuid NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
@@ -74,7 +68,6 @@ CREATE TABLE public.products (
 CREATE INDEX products_store_status_idx ON public.products(store_id, status);
 CREATE INDEX products_category_idx ON public.products(category_id);
 
--- ============ CUSTOMERS ============
 CREATE TABLE public.customers (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   store_id uuid NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
@@ -92,7 +85,6 @@ CREATE TABLE public.customers (
 );
 CREATE INDEX idx_customers_store ON public.customers(store_id);
 
--- ============ ORDERS ============
 CREATE TABLE public.orders (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   store_id uuid NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
@@ -113,7 +105,6 @@ CREATE TABLE public.orders (
 CREATE INDEX idx_orders_store ON public.orders(store_id);
 CREATE INDEX idx_orders_customer ON public.orders(customer_id);
 
--- ============ ORDER ITEMS ============
 CREATE TABLE public.order_items (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id uuid NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
@@ -126,7 +117,6 @@ CREATE TABLE public.order_items (
 );
 CREATE INDEX idx_order_items_order ON public.order_items(order_id);
 
--- ============ CUSTOMER ACTIVITIES ============
 CREATE TABLE public.customer_activities (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   store_id uuid NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
@@ -137,7 +127,6 @@ CREATE TABLE public.customer_activities (
 );
 CREATE INDEX idx_activities_customer ON public.customer_activities(customer_id);
 
--- ============ DISCOUNT CODES ============
 CREATE TABLE public.discount_codes (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   store_id uuid NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
@@ -155,7 +144,6 @@ CREATE TABLE public.discount_codes (
 );
 CREATE INDEX idx_discount_codes_store ON public.discount_codes(store_id);
 
--- ============ PRODUCT REVIEWS ============
 CREATE TABLE public.product_reviews (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   store_id uuid NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
@@ -172,7 +160,6 @@ CREATE TABLE public.product_reviews (
 CREATE INDEX idx_reviews_product ON public.product_reviews(product_id, status);
 CREATE INDEX idx_reviews_store ON public.product_reviews(store_id, status, created_at DESC);
 
--- ============ AI INSIGHTS ============
 CREATE TABLE public.ai_insights (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   store_id uuid NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
@@ -189,7 +176,6 @@ CREATE TABLE public.ai_insights (
 CREATE INDEX idx_ai_insights_customer ON public.ai_insights(customer_id);
 CREATE INDEX idx_ai_insights_store ON public.ai_insights(store_id, created_at DESC);
 
--- ============ INVENTORY ADJUSTMENTS ============
 CREATE TABLE public.inventory_adjustments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   store_id uuid NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
@@ -203,36 +189,6 @@ CREATE TABLE public.inventory_adjustments (
 CREATE INDEX idx_inv_adj_store ON public.inventory_adjustments(store_id, created_at DESC);
 CREATE INDEX idx_inv_adj_product ON public.inventory_adjustments(product_id, created_at DESC);
 
--- ============ DEFERRED TABLES (Empty shells for MVP) ============
-CREATE TABLE public.deals (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  store_id uuid NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
-  title text NOT NULL,
-  value numeric NOT NULL DEFAULT 0,
-  stage text NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
-CREATE TABLE public.pipeline_stages (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  store_id uuid NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
-  name text NOT NULL,
-  position integer NOT NULL DEFAULT 0,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
-CREATE TABLE public.email_campaigns (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  store_id uuid NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
-  name text NOT NULL,
-  status text NOT NULL DEFAULT 'draft',
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
--- ============ TRIGGERS FOR updated_at ============
 CREATE OR REPLACE FUNCTION public.set_updated_at()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -251,6 +207,3 @@ CREATE TRIGGER customers_set_updated_at BEFORE UPDATE ON public.customers FOR EA
 CREATE TRIGGER orders_set_updated_at BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER discount_codes_set_updated_at BEFORE UPDATE ON public.discount_codes FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER product_reviews_set_updated_at BEFORE UPDATE ON public.product_reviews FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER deals_set_updated_at BEFORE UPDATE ON public.deals FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER pipeline_stages_set_updated_at BEFORE UPDATE ON public.pipeline_stages FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER email_campaigns_set_updated_at BEFORE UPDATE ON public.email_campaigns FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();

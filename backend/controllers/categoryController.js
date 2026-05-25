@@ -18,7 +18,7 @@ exports.create = [
       });
       res.status(201).json({ success: true, data: category });
     } catch (error) {
-      if (error.code === '23505') { // Unique constraint
+      if (error.code === '23505') {
         return res.status(409).json({ error: 'Category slug already exists' });
       }
       next(error);

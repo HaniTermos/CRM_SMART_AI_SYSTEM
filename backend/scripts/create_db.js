@@ -7,14 +7,12 @@ async function createDatabase() {
     port: parseInt(process.env.DB_PORT, 10) || 5432,
     user: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASSWORD || '123456789',
-    database: 'postgres', // Connect to default database
+    database: 'postgres',
   });
 
   try {
     await client.connect();
     console.log('[DB] Connected to default "postgres" database');
-    
-    // Check if smartstore_ai database exists
     const res = await client.query("SELECT 1 FROM pg_database WHERE datname = 'smartstore_ai'");
     if (res.rows.length === 0) {
       console.log('[DB] Creating "smartstore_ai" database...');

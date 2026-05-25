@@ -3,7 +3,6 @@ const db = require('../config/database');
 class Store {
   static async create({ owner_user_id, name, slug, currency = 'USD', shipping_fee = 0 }) {
     return db.transaction(async (client) => {
-      // Create the store
       const storeResult = await client.query(
         `INSERT INTO stores (owner_user_id, name, slug, currency, shipping_fee) 
          VALUES ($1, $2, $3, $4, $5) 
@@ -13,7 +12,6 @@ class Store {
       
       const store = storeResult.rows[0];
 
-      // Assign the owner role in user_roles
       await client.query(
         `INSERT INTO user_roles (user_id, store_id, role) VALUES ($1, $2, 'owner')`,
         [owner_user_id, store.id]
@@ -24,7 +22,6 @@ class Store {
   }
 
   static async findByUserId(userId) {
-    // A user can access stores where they are the owner OR have a role
     const result = await db.query(
       `SELECT s.*, r.role as my_role 
        FROM stores s

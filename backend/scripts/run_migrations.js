@@ -2,19 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const db = require('../config/database');
 
-/**
- * Simple migration runner.
- * Reads .sql files from the migrations/ directory in sorted order
- * and executes them against the database.
- *
- * Tracks applied migrations in a `_migrations` table to avoid re-running.
- *
- * Usage:  node scripts/run_migrations.js
- */
 async function run() {
   const migrationsDir = path.join(__dirname, '..', 'migrations');
-
-  // Ensure the tracking table exists
   await db.query(`
     CREATE TABLE IF NOT EXISTS _migrations (
       id SERIAL PRIMARY KEY,
@@ -23,11 +12,8 @@ async function run() {
     )
   `);
 
-  // Get already-applied migrations
   const applied = await db.query('SELECT filename FROM _migrations ORDER BY filename');
   const appliedSet = new Set(applied.rows.map((r) => r.filename));
-
-  // Read and sort migration files
   const files = fs
     .readdirSync(migrationsDir)
     .filter((f) => f.endsWith('.sql'))

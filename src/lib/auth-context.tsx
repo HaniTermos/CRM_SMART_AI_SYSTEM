@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { api } from "./api";
 
-// Custom User type for our new backend
 export type User = {
   id: string;
   email: string;
@@ -10,7 +9,6 @@ export type User = {
   has_store: boolean;
 };
 
-// We drop the Supabase "Session" concept and just track the User and loading state.
 type AuthState = {
   user: User | null;
   loading: boolean;
@@ -27,15 +25,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const checkAuth = async () => {
       const token = localStorage.getItem('smartstore_token');
       
-      if (!token) {
+      // Treat empty/whitespace-only tokens as missing
+      if (!token || typeof token !== 'string' || token.trim() === '' || token === 'undefined' || token === 'null') {
+        localStorage.removeItem('smartstore_token');
         if (mounted) setState({ user: null, loading: false });
         return;
       }
 
       try {
-        // Fetch current user from our custom backend
         const res = await api.get('/auth/me');
-        if (mounted) setState({ user: res.data.data, loading: false });
+        const user = res.data?.data;
+        if (mounted) setState({ user: user ?? null, loading: false });
       } catch (error) {
         console.error("Auth check failed:", error);
         localStorage.removeItem('smartstore_token');
@@ -44,8 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     checkAuth();
-
-    // Listen for the custom global auth error event dispatched by api.ts
+    
     const handleAuthError = () => {
       if (mounted) setState({ user: null, loading: false });
     };

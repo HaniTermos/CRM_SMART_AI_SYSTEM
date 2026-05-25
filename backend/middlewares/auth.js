@@ -1,10 +1,6 @@
 const jwt = require('jsonwebtoken');
 const db = require('../config/database');
 
-/**
- * Verifies the JWT Bearer token from the Authorization header.
- * Sets req.user = { id, email, name, role } on success.
- */
 const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -39,16 +35,6 @@ const authenticate = async (req, res, next) => {
   }
 };
 
-/**
- * Restricts access to users with specific roles.
- * Must be used AFTER authenticate middleware.
- *
- * Checks the user_roles table for the given store context.
- * If no storeId is present, falls back to checking if the user
- * has the role in ANY store.
- *
- * Usage:  router.get('/', authenticate, authorize('owner', 'admin'), handler)
- */
 const authorize = (...roles) => {
   return async (req, res, next) => {
     if (!req.user) {
@@ -58,7 +44,6 @@ const authorize = (...roles) => {
     const storeId = req.params.storeId || req.body.store_id || req.query.store_id;
 
     if (storeId) {
-      // Check store-specific role
       const result = await db.query(
         'SELECT role FROM user_roles WHERE user_id = $1 AND store_id = $2',
         [req.user.id, storeId]
@@ -73,13 +58,6 @@ const authorize = (...roles) => {
   };
 };
 
-/**
- * Verifies the authenticated user has access to the store
- * identified by req.params.storeId.
- *
- * Checks user_roles table (supports owner/admin/staff).
- * Sets req.store and req.userRole on success.
- */
 const requireStoreAccess = async (req, res, next) => {
   try {
     const storeId = req.params.storeId || req.body.store_id || req.query.store_id;
@@ -88,14 +66,12 @@ const requireStoreAccess = async (req, res, next) => {
       return res.status(400).json({ error: 'Store ID required.' });
     }
 
-    // Check if user has any role in this store
     const roleResult = await db.query(
       'SELECT role FROM user_roles WHERE user_id = $1 AND store_id = $2',
       [req.user.id, storeId]
     );
 
     if (roleResult.rows.length === 0) {
-      // Fallback: check if user is the store owner (owner_user_id)
       const storeResult = await db.query(
         'SELECT id FROM stores WHERE id = $1 AND owner_user_id = $2',
         [storeId, req.user.id]
@@ -110,7 +86,6 @@ const requireStoreAccess = async (req, res, next) => {
       req.userRole = roleResult.rows[0].role;
     }
 
-    // Load store data
     const storeResult = await db.query(
       'SELECT * FROM stores WHERE id = $1',
       [storeId]
@@ -128,9 +103,6 @@ const requireStoreAccess = async (req, res, next) => {
   }
 };
 
-/**
- * Like requireStoreAccess but only allows owner and admin roles.
- */
 const requireStoreAdmin = async (req, res, next) => {
   try {
     const storeId = req.params.storeId || req.body.store_id || req.query.store_id;
@@ -146,7 +118,6 @@ const requireStoreAdmin = async (req, res, next) => {
     );
 
     if (roleResult.rows.length === 0) {
-      // Fallback: check direct ownership
       const storeResult = await db.query(
         'SELECT id FROM stores WHERE id = $1 AND owner_user_id = $2',
         [storeId, req.user.id]

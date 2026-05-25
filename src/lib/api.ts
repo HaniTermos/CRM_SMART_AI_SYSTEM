@@ -1,6 +1,4 @@
 import axios from 'axios';
-
-// The backend URL is where our new Express server is running
 const baseURL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000/api';
 
 export const api = axios.create({
@@ -11,7 +9,6 @@ export const api = axios.create({
   },
 });
 
-// Intercept requests to attach the JWT token if available
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('smartstore_token');
   if (token) {
@@ -22,14 +19,17 @@ api.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-// Intercept responses to handle global auth errors (e.g. 401)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.error('API response error:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
     if (error.response?.status === 401) {
-      // Clear token and trigger re-auth logic
       localStorage.removeItem('smartstore_token');
-      // A standard SPA pattern would be to dispatch a custom event or redirect
       window.dispatchEvent(new Event('auth-error'));
     }
     return Promise.reject(error);

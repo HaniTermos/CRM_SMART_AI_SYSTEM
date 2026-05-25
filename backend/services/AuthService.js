@@ -13,9 +13,6 @@ class AuthService {
 
     const user = await User.create({ email, password, name, role });
     const token = this.generateToken(user);
-    
-    // Check if any stores exist for this user (e.g. from a previous partial attempt)
-    // Return a flag if onboarding is needed
     const storeCount = await db.query('SELECT COUNT(*) FROM user_roles WHERE user_id = $1', [user.id]);
     user.has_store = parseInt(storeCount.rows[0].count) > 0;
 
@@ -37,7 +34,6 @@ class AuthService {
       throw error;
     }
 
-    // Strip password_hash before returning
     const safeUser = {
       id: user.id,
       email: user.email,
@@ -47,8 +43,6 @@ class AuthService {
     };
 
     const token = this.generateToken(safeUser);
-    
-    // Check store access for the frontend onboarding gate
     const storeCount = await db.query('SELECT COUNT(*) FROM user_roles WHERE user_id = $1', [user.id]);
     safeUser.has_store = parseInt(storeCount.rows[0].count) > 0;
 

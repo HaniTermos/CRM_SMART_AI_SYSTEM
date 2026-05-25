@@ -1,10 +1,6 @@
 const db = require('../config/database');
 
 class Order {
-  /**
-   * Creates an order and its items in a transaction.
-   * Logs a customer activity for the order placement.
-   */
   static async createWithItems({ 
     store_id, 
     customer_id, 
@@ -19,7 +15,6 @@ class Order {
     notes,
     items 
   }, client) {
-    // Note: We expect the caller to wrap this in db.transaction if they don't provide a client
     const execute = async (tx) => {
       const orderResult = await tx.query(
         `INSERT INTO orders (store_id, customer_id, order_number, payment_method, subtotal, shipping_fee, discount_code, discount_amount, total, shipping_address, notes) 
@@ -30,7 +25,6 @@ class Order {
       
       const order = orderResult.rows[0];
 
-      // Insert all items
       for (const item of items) {
         await tx.query(
           `INSERT INTO order_items (order_id, product_id, product_name, unit_price, quantity, subtotal) 
@@ -39,7 +33,6 @@ class Order {
         );
       }
 
-      // Update customer stats
       await tx.query(
         `UPDATE customers 
          SET total_orders = total_orders + 1, 
@@ -88,7 +81,6 @@ class Order {
   }
 
   static async findByStore(storeId) {
-    // Join with customers to get name/phone for the list view
     const result = await db.query(
       `SELECT o.*, c.name as customer_name, c.phone as customer_phone 
        FROM orders o

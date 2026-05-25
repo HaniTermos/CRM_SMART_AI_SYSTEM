@@ -20,7 +20,7 @@ export const deleteDiscount = async ({ data }: { data: { storeId: string; id: st
   return { ok: true };
 };
 
-export const validateDiscount = async ({ data }: { data: { storeSlug: string; code: string; subtotal: number } }) => {
+export const validateDiscount = async ({ data }: { data: { storeSlug: string; code: string; subtotal: number; phone?: string; email?: string } }) => {
   try {
     const res = await api.post(`/public/stores/${data.storeSlug}/discounts/validate`, data);
     return { ok: true, ...res.data.data };
