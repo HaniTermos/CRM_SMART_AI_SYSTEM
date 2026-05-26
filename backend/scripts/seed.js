@@ -152,8 +152,8 @@ async function seed() {
       storeCustomers[slug] = [];
       for (let i = 1; i <= 12; i++) {
         const custId = await insertAndGetId(
-          `INSERT INTO customers (store_id, name, phone, email, segment, total_orders) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-          [stores[slug], `Customer ${i} ${slug.split('-')[0]}`, `+961000${slug.length}${i}${getRandInt(10,99)}`, `cust${i}@${slug}.com`, getRandom(segments), getRandInt(1,5)]
+          `INSERT INTO customers (store_id, name, phone, email, segment, total_orders, total_spent) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+          [stores[slug], `Customer ${i} ${slug.split('-')[0]}`, `+961000${slug.length}${i}${getRandInt(10,99)}`, `cust${i}@${slug}.com`, getRandom(segments), 0, 0]
         );
         storeCustomers[slug].push(custId);
       }
@@ -224,14 +224,33 @@ async function seed() {
     }
 
     // ==========================================
-    // 11. AI INSIGHTS (15+ total)
+    // 11. AI INSIGHTS (varied, realistic)
     // ==========================================
     console.log('[SEED] 11/14 Creating AI Insights...');
+    const insightTemplates = [
+      { summary: 'Customer has high repeat purchase rate in the snacks category.', next_action: 'Offer a bundle discount on complementary snack items.' },
+      { summary: 'Customer placed 3 orders in the last month but average order value is below store median.', next_action: 'Recommend upsell items at checkout to increase AOV.' },
+      { summary: 'Customer only buys during promotional periods and waits for discounts.', next_action: 'Add to early-access sale list to drive urgency.' },
+      { summary: 'Customer has not ordered in 45 days after consistent weekly purchases.', next_action: 'Send a personalized "We miss you" email with a 10% discount.' },
+      { summary: 'Customer prefers COD and always orders on weekends.', next_action: 'Target weekend SMS campaigns with COD reassurance messaging.' },
+      { summary: 'Customer frequently buys gifts for others — high gifting behavior.', next_action: 'Promote gift wrapping and seasonal gift bundles.' },
+      { summary: 'Customer is price-sensitive but loyal — always checks for deals.', next_action: 'Enroll in loyalty program and notify of exclusive member pricing.' },
+      { summary: 'New customer with one high-value order — strong onboarding opportunity.', next_action: 'Send welcome series with top-rated products and store story.' },
+    ];
     for (const slug of Object.keys(stores)) {
       for (let i = 0; i < 5; i++) {
+        const template = insightTemplates[i % insightTemplates.length];
         await db.query(
-          `INSERT INTO ai_insights (store_id, customer_id, kind, summary, next_action) VALUES ($1, $2, 'customer_analysis', 'Customer shows high lifetime value potential based on recent category browsing.', 'Send VIP welcome email')`,
-          [stores[slug], getRandom(storeCustomers[slug])]
+          `INSERT INTO ai_insights (store_id, customer_id, kind, summary, next_action, email_subject, recommendations)
+           VALUES ($1, $2, 'customer_analysis', $3, $4, $5, $6)`,
+          [
+            stores[slug],
+            getRandom(storeCustomers[slug]),
+            template.summary,
+            template.next_action,
+            'Follow-up from ' + storeFixtures[slug].name,
+            JSON.stringify([{ type: 'discount', value: (10 + i * 5) + '%' }, { type: 'product_upsell', value: 'Related Items' }])
+          ]
         );
       }
     }

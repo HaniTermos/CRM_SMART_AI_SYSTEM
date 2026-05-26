@@ -111,20 +111,71 @@ function ReportsPage() {
       <Card>
         <CardHeader><CardTitle>Daily revenue (last 30 days)</CardTitle></CardHeader>
         <CardContent>
-          <div className="flex h-40 items-end gap-1">
-            {stats.days.map((d) => (
-              <div key={d.date} className="group flex-1" title={`${d.date} — ${cur} ${d.revenue.toFixed(2)} (${d.orders} orders)`}>
-                <div
-                  className="w-full rounded-sm bg-primary/70 transition-colors group-hover:bg-primary"
-                  style={{ height: `${(d.revenue / maxDayRev) * 100}%`, minHeight: d.revenue > 0 ? 2 : 0 }}
-                />
+          {stats.paidCount === 0 ? (
+            <div className="flex h-52 flex-col items-center justify-center gap-2 rounded-lg border border-dashed">
+              <BarChart3 className="h-8 w-8 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground">No orders in the last 30 days.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {/* Y-axis labels + chart area */}
+              <div className="relative flex h-52 gap-1">
+                {/* Y-axis */}
+                <div className="flex w-10 flex-col justify-between py-1 text-right text-[10px] text-muted-foreground">
+                  <span>{cur} {maxDayRev.toFixed(0)}</span>
+                  <span>{cur} {(maxDayRev / 2).toFixed(0)}</span>
+                  <span>0</span>
+                </div>
+
+                {/* Grid lines + bars */}
+                <div className="relative flex flex-1 gap-[2px]">
+                  {/* Horizontal grid lines */}
+                  <div className="pointer-events-none absolute inset-0 flex flex-col justify-between">
+                    <div className="border-t border-dashed border-border/60" />
+                    <div className="border-t border-dashed border-border/60" />
+                    <div className="border-t border-border/60" />
+                  </div>
+
+                  {stats.days.map((d) => {
+                    const heightPct = Math.min(100, (d.revenue / maxDayRev) * 100);
+                    return (
+                      <div
+                        key={d.date}
+                        className="group relative flex flex-1 flex-col justify-end"
+                      >
+                        {/* Tooltip */}
+                        <div className="absolute -top-10 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-popover px-2 py-1 text-xs text-popover-foreground shadow-md ring-1 ring-border group-hover:block">
+                          {d.date} · {cur} {d.revenue.toFixed(2)} · {d.orders} order{d.orders !== 1 ? "s" : ""}
+                        </div>
+
+                        {/* Bar track */}
+                        <div className="relative flex h-full w-full flex-col justify-end rounded-sm bg-muted/40">
+                          {/* Actual bar */}
+                          <div
+                            className="w-full rounded-sm bg-primary/80 transition-all group-hover:bg-primary"
+                            style={{ height: `${heightPct}%`, minHeight: d.revenue > 0 ? 3 : 0 }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            ))}
-          </div>
-          <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
-            <span>{stats.days[0]?.date}</span>
-            <span>{stats.days[stats.days.length - 1]?.date}</span>
-          </div>
+
+              {/* X-axis labels */}
+              <div className="flex gap-[2px] pl-10">
+                {stats.days.map((d, i) => {
+                  const day = new Date(d.date + "T00:00:00").getDate();
+                  const showLabel = i === 0 || i === stats.days.length - 1 || day === 1 || i % 5 === 0;
+                  return (
+                    <div key={d.date + "-x"} className="flex-1 text-center text-[10px] text-muted-foreground">
+                      {showLabel ? day : ""}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

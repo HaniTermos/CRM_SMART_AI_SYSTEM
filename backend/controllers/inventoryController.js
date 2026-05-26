@@ -1,12 +1,13 @@
 const { body } = require('express-validator');
 const InventoryAdjustment = require('../models/InventoryAdjustment');
 const { validate } = require('../middlewares/validate');
+const db = require('../config/database');
 
 const adjustValidation = [
   body('product_id').isUUID(),
   body('delta').isInt(),
   body('reason').notEmpty().trim(),
-  body('note').optional().isString()
+  body('note').optional({ nullable: true }).isString()
 ];
 
 exports.adjust = [
@@ -22,7 +23,8 @@ exports.adjust = [
         note: req.body.note,
         created_by: req.user.id
       });
-      res.status(201).json({ success: true, data: adjustment });
+      const productRes = await db.query('SELECT stock FROM products WHERE id = $1', [req.body.product_id]);
+      res.status(201).json({ success: true, data: { ...adjustment, stock: productRes.rows[0]?.stock } });
     } catch (error) {
       next(error);
     }

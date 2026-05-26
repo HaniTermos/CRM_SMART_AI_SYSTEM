@@ -6,6 +6,8 @@ const { authenticate, requireStoreAccess } = require('../middlewares/auth');
 router.use(authenticate);
 router.use(requireStoreAccess);
 
+router.get('/smtp-status', campaignController.getSmtpStatus);
+router.post('/test-smtp', campaignController.testSmtp);
 router.get('/', campaignController.getCampaigns);
 router.post('/', campaignController.createCampaign);
 router.patch('/:campaignId', campaignController.updateCampaign);

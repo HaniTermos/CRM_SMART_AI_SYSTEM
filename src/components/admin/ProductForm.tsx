@@ -21,7 +21,7 @@ import {
 
 const schema = z.object({
   name: z.string().trim().min(1).max(120),
-  slug: z.string().trim().min(1).max(80).regex(/^[a-z0-9-]+$/),
+  slug: z.string().trim().min(1).max(80).regex(/^[a-zA-Z0-9_-]+$/),
   description: z.string().trim().max(2000).optional().or(z.literal("")),
   price: z.number().min(0).max(1_000_000),
   stock: z.number().int().min(0).max(1_000_000),

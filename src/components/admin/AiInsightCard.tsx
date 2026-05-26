@@ -4,7 +4,7 @@ import { generateCustomerInsight } from "@/lib/ai.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Mail, Copy } from "lucide-react";
+import { Sparkles, Mail, Copy, Zap, CircleOff } from "lucide-react";
 import { toast } from "sonner";
 
 type Insight = {
@@ -14,6 +14,7 @@ type Insight = {
   email_subject: string | null;
   email_body: string | null;
   recommendations: unknown;
+  model: string | null;
   created_at: string;
 };
 
@@ -123,9 +124,17 @@ export function AiInsightCard({
                 </div>
               </div>
             ) : null}
-            <p className="text-[11px] text-muted-foreground">
-              Generated {new Date(latest.created_at).toLocaleString()}
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] text-muted-foreground">
+                Generated {new Date(latest.created_at).toLocaleString()}
+              </p>
+              {latest.model ? (
+                <span className={`inline-flex items-center gap-1 text-[11px] ${latest.model.includes('Live') || !latest.model.includes('Fallback') && !latest.model.includes('Heuristic') ? 'text-green-600' : 'text-amber-600'}`}>
+                  {latest.model.includes('Live') || (!latest.model.includes('Fallback') && !latest.model.includes('Heuristic')) ? <Zap className="h-3 w-3" /> : <CircleOff className="h-3 w-3" />}
+                  {latest.model}
+                </span>
+              ) : null}
+            </div>
           </div>
         )}
       </CardContent>

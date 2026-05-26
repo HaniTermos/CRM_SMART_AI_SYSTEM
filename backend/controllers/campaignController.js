@@ -1,6 +1,52 @@
 const db = require('../config/database');
 const emailService = require('../services/emailService');
 
+exports.getSmtpStatus = async (req, res, next) => {
+  try {
+    const enabled = emailService.isEnabled();
+    res.json({
+      success: true,
+      data: {
+        enabled,
+        host: process.env.SMTP_HOST || null,
+        port: process.env.SMTP_PORT || null,
+        user: process.env.SMTP_USER || null,
+        from: process.env.EMAIL_FROM || null,
+        message: enabled
+          ? 'SMTP is configured. Emails will be sent to real recipients.'
+          : 'SMTP is not configured. Campaigns will run in simulation mode only.',
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.testSmtp = async (req, res, next) => {
+  try {
+    if (!emailService.isEnabled()) {
+      return res.status(400).json({ error: 'SMTP is not configured.' });
+    }
+
+    const { to } = req.body;
+    if (!to || !to.includes('@')) {
+      return res.status(400).json({ error: 'A valid recipient email is required.' });
+    }
+
+    await emailService.sendMail({
+      to,
+      subject: 'SmartStore AI — SMTP Test',
+      html: '<p>This is a test email from your SmartStore AI system.</p><p>If you received this, your SMTP configuration is working correctly.</p>',
+      text: 'This is a test email from your SmartStore AI system. If you received this, your SMTP configuration is working correctly.',
+    });
+
+    res.json({ success: true, message: `Test email sent to ${to}. Check your inbox.` });
+  } catch (error) {
+    console.error('[SMTP Test] Failed:', error);
+    res.status(500).json({ error: error.message || 'Failed to send test email.' });
+  }
+};
+
 exports.getCampaigns = async (req, res, next) => {
   try {
     const { storeId } = req.params;

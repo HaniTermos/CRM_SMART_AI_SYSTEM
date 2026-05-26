@@ -164,7 +164,7 @@ function SettingsPage() {
               </thead>
               <tbody>
                 {members.map((m) => (
-                  <tr key={m.id} className="border-b last:border-0">
+                  <tr key={m.user_id} className="border-b last:border-0">
                     <td className="p-3">
                       <div className="font-medium">{m.name ?? m.email ?? "—"}</div>
                       <div className="text-xs text-muted-foreground">{m.email}</div>

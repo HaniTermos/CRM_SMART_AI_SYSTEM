@@ -187,6 +187,16 @@ exports.placeOrder = async (req, res, next) => {
       await db.query('UPDATE products SET stock = GREATEST(0, stock - $1) WHERE id = $2', [oi.quantity, oi.product_id]);
     }
 
+    // Update customer order stats
+    await db.query(
+      `UPDATE customers 
+       SET total_orders = total_orders + 1, 
+           total_spent = total_spent + $1,
+           last_order_at = NOW()
+       WHERE id = $2`,
+      [total, customerId]
+    );
+
     res.json({ success: true, data: { order_number: orderNumber, id: orderId } });
   } catch (error) {
     next(error);

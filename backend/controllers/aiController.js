@@ -45,13 +45,20 @@ exports.getInsights = async (req, res, next) => {
 exports.getReengagement = async (req, res, next) => {
   try {
     const { storeId } = req.params;
+    // Re-engagement candidates = customers who either:
+    // 1. Haven't ordered in 30+ days, OR
+    // 2. Have never ordered at all (NULL last_order_at) but are not churned
+    // Sorted by lifetime value (total_spent DESC) — highest value first
     const result = await db.query(
       `SELECT id, name, email, phone, last_order_at, segment, total_orders, total_spent
        FROM customers 
        WHERE store_id = $1 
-         AND last_order_at < NOW() - INTERVAL '30 days'
          AND segment != 'churned'
-       ORDER BY last_order_at ASC
+         AND (
+           last_order_at < NOW() - INTERVAL '30 days'
+           OR last_order_at IS NULL
+         )
+       ORDER BY total_spent DESC, last_order_at ASC NULLS LAST
        LIMIT 10`,
       [storeId]
     );
@@ -119,4 +126,42 @@ exports.scoreDemand = async (req, res, next) => {
   }
 };
 
+exports.chat = async (req, res, next) => {
+  try {
+    const { prompt, context } = req.body;
+    if (!prompt || !prompt.trim()) {
+      return res.status(400).json({ error: 'Prompt is required.' });
+    }
+
+    const result = await AiService.chat(prompt.trim(), context || 'general');
+    res.json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getStatus = async (req, res, next) => {
+  try {
+    const status = AiService.getStatus();
+    res.json({ success: true, data: status });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.generateCampaign = async (req, res, next) => {
+  try {
+    const { storeId } = req.params;
+    const { description, segment } = req.body;
+
+    if (!description || !description.trim()) {
+      return res.status(400).json({ error: 'Campaign description is required.' });
+    }
+
+    const campaignData = await AiService.generateCampaign(req.store, description.trim(), segment);
+    res.json({ success: true, data: campaignData });
+  } catch (error) {
+    next(error);
+  }
+};
 

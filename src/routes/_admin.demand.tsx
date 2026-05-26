@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Lightbulb, TrendingUp } from "lucide-react";
+import { Lightbulb, TrendingUp, Zap, CircleOff } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_admin/demand")({
@@ -80,13 +80,16 @@ function DemandPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 p-6 md:p-10">
-      <header>
-        <h1 className="inline-flex items-center gap-2 text-3xl font-bold tracking-tight">
-          <Lightbulb className="h-6 w-6 text-primary" /> Demand scoring
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          Pitch a new product idea. AI scores it against your catalog and recent buying patterns.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="inline-flex items-center gap-2 text-3xl font-bold tracking-tight">
+            <Lightbulb className="h-6 w-6 text-primary" /> Demand scoring
+          </h1>
+          <p className="mt-1 text-muted-foreground">
+            Pitch a new product idea. AI scores it against your catalog and recent buying patterns.
+          </p>
+        </div>
+        <AiStatusBadge />
       </header>
 
       <Card>
@@ -206,4 +209,25 @@ function ScoreBadge({ score, confidence }: { score?: number; confidence?: string
   if (typeof score !== "number") return null;
   const tone = score >= 70 ? "default" : score >= 40 ? "secondary" : "outline";
   return <Badge variant={tone as "default" | "secondary" | "outline"}>{Math.round(score)}/100 · {confidence ?? "—"}</Badge>;
+}
+
+function AiStatusBadge() {
+  const { data: store } = useMyStore();
+  const { data: status } = useQuery({
+    queryKey: ["ai-status", store?.id],
+    enabled: !!store?.id,
+    queryFn: async () => {
+      const res = await api.get(`/ai/${store!.id}/status`);
+      return res.data.data;
+    },
+  });
+
+  if (!status) return null;
+
+  return (
+    <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${status.connected ? "border-green-200 bg-green-50 text-green-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}>
+      {status.connected ? <Zap className="h-3 w-3" /> : <CircleOff className="h-3 w-3" />}
+      {status.connected ? "Gemini Live" : "Fallback Mode"}
+    </div>
+  );
 }

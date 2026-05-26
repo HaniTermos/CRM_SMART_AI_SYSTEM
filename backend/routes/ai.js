@@ -11,5 +11,8 @@ router.get('/reengagement', requireStoreAccess, aiController.getReengagement);
 router.get('/recent-insights', requireStoreAccess, aiController.getRecentInsights);
 router.get('/demand-history', requireStoreAccess, aiController.getDemandHistory);
 router.post('/demand', requireStoreAccess, aiController.scoreDemand);
+router.post('/chat', requireStoreAccess, aiController.chat);
+router.get('/status', requireStoreAccess, aiController.getStatus);
+router.post('/generate-campaign', requireStoreAccess, aiController.generateCampaign);
 
 module.exports = router;

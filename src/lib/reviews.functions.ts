@@ -1,8 +1,14 @@
 import { api } from "./api";
 
 export const submitReview = async ({ data }: { data: any }) => {
-  const res = await api.post(`/reviews/${data.storeSlug}/submit`, data);
-  return { ok: true, verified: res.data.data.verified };
+  const res = await api.post(`/reviews/${data.storeSlug}/submit`, {
+    product_id: data.productId,
+    author_name: data.authorName,
+    customer_phone: data.phone || null,
+    rating: data.rating,
+    comment: data.comment || null,
+  });
+  return { ok: true, verified: res.data.data.verified_purchase };
 };
 
 export const listReviews = async ({ data }: { data: { storeId: string; status: string } }) => {

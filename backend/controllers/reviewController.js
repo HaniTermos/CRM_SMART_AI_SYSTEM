@@ -4,10 +4,10 @@ const { validate } = require('../middlewares/validate');
 
 const createValidation = [
   body('product_id').isUUID(),
-  body('customer_phone').optional().isString(),
+  body('customer_phone').optional({ nullable: true }).isString(),
   body('author_name').notEmpty().trim(),
   body('rating').isInt({ min: 1, max: 5 }),
-  body('comment').optional().isString()
+  body('comment').optional({ nullable: true }).isString()
 ];
 
 exports.create = [

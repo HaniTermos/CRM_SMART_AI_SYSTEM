@@ -26,7 +26,7 @@ class Customer {
 
   static async findByStore(storeId) {
     const result = await db.query(
-      'SELECT * FROM customers WHERE store_id = $1 ORDER BY last_order_at DESC NULLS LAST, created_at DESC', 
+      `SELECT * FROM customers WHERE store_id = $1 ORDER BY created_at DESC`, 
       [storeId]
     );
     return result.rows;

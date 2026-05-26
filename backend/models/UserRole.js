@@ -42,7 +42,7 @@ class UserRole {
 
   static async findByStore(storeId) {
     const result = await db.query(
-      `SELECT ur.user_id as id, ur.role, u.name, u.email 
+      `SELECT ur.user_id, ur.role, u.name, u.email, ur.created_at
        FROM user_roles ur
        JOIN users u ON ur.user_id = u.id
        WHERE ur.store_id = $1

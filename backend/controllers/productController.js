@@ -4,7 +4,7 @@ const { validate } = require('../middlewares/validate');
 
 const createValidation = [
   body('name').notEmpty().trim().withMessage('Product name is required'),
-  body('slug').notEmpty().trim().matches(/^[a-z0-9-]+$/).withMessage('Valid slug is required'),
+  body('slug').notEmpty().trim().matches(/^[a-zA-Z0-9_-]+$/).withMessage('Valid slug is required'),
   body('price').isNumeric().withMessage('Price must be a number'),
   body('stock').isInt({ min: 0 }).withMessage('Stock must be a positive integer'),
   body('category_id').optional({ nullable: true }).isUUID(),
@@ -13,7 +13,7 @@ const createValidation = [
 
 const updateValidation = [
   body('name').optional().notEmpty().trim(),
-  body('slug').optional().notEmpty().trim().matches(/^[a-z0-9-]+$/),
+  body('slug').optional().notEmpty().trim().matches(/^[a-zA-Z0-9_-]+$/),
   body('price').optional().isNumeric(),
   body('stock').optional().isInt({ min: 0 }),
   body('category_id').optional({ nullable: true }).isUUID(),
