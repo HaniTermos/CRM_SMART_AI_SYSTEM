@@ -1,32 +1,216 @@
-# Logs
-logs
+# ============================================================
+# SmartStore AI — .gitignore
+# ============================================================
+
+# ────────────────────────────────────────────────────────────
+# ENVIRONMENT VARIABLES (never commit these)
+# ────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+.env.example
+backend/.env
+backend/.env.local
+backend/.env.production
+backend/.env.example
+
+# ────────────────────────────────────────────────────────────
+# NODE MODULES
+# ────────────────────────────────────────────────────────────
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+*/node_modules/
+
+# ────────────────────────────────────────────────────────────
+# BUILD OUTPUT
+# ────────────────────────────────────────────────────────────
+dist/
+dist-ssr/
+build/
+out/
+.output/
+backend/dist/
+
+# ────────────────────────────────────────────────────────────
+# VITE
+# ────────────────────────────────────────────────────────────
+*.local
+.vite/
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# ────────────────────────────────────────────────────────────
+# TANSTACK ROUTER (auto-generated — do NOT commit)
+# ────────────────────────────────────────────────────────────
+src/routeTree.gen.ts
+
+# ────────────────────────────────────────────────────────────
+# LOGS
+# ────────────────────────────────────────────────────────────
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+backend/logs/
+combined.log
+error.log
 
-node_modules
-dist
-dist-ssr
-.output
-.vinxi
-.tanstack/**
-.nitro
-*.local
+# ────────────────────────────────────────────────────────────
+# FILE UPLOADS (user-uploaded product images etc.)
+# ────────────────────────────────────────────────────────────
+backend/uploads/
+uploads/
+public/uploads/
 
-# Wrangler / Cloudflare
-.wrangler/
-.dev.vars
+# ────────────────────────────────────────────────────────────
+# DATABASE
+# ────────────────────────────────────────────────────────────
+*.sql.bak
+*.dump
+*.sqlite
+*.sqlite3
+*.db
+pgdata/
+postgres-data/
 
-# Editor directories and files
+# ────────────────────────────────────────────────────────────
+# PACKAGE MANAGER LOCKS (keep only one — you use npm)
+# ────────────────────────────────────────────────────────────
+yarn.lock
+pnpm-lock.yaml
+bun.lockb
+# keep package-lock.json (npm)
+
+# ────────────────────────────────────────────────────────────
+# OS GENERATED FILES
+# ────────────────────────────────────────────────────────────
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+Icon?
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ────────────────────────────────────────────────────────────
+# EDITORS & IDEs
+# ────────────────────────────────────────────────────────────
+
+# VS Code
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+!.vscode/settings.json
+!.vscode/launch.json
+
+# Cursor
+.cursor/
+.cursorignore
+
+# JetBrains (WebStorm, IntelliJ)
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Vim / Neovim
+*.swp
+*.swo
+*~
+.vim/
+
+# Emacs
+*#
+.emacs.desktop
+.emacs.desktop.lock
+
+# Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+
+# ────────────────────────────────────────────────────────────
+# TESTING
+# ────────────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+*.lcov
+test-results/
+playwright-report/
+playwright/.cache/
+
+# ────────────────────────────────────────────────────────────
+# TYPESCRIPT
+# ────────────────────────────────────────────────────────────
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# ────────────────────────────────────────────────────────────
+# CACHE
+# ────────────────────────────────────────────────────────────
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.prettiercache
+.turbo/
+.rollup.cache/
+
+# ────────────────────────────────────────────────────────────
+# DOCKER (if added later)
+# ────────────────────────────────────────────────────────────
+.dockerignore
+docker-compose.override.yml
+
+# ────────────────────────────────────────────────────────────
+# DEPLOYMENT / CLOUD
+# ────────────────────────────────────────────────────────────
+.vercel/
+.netlify/
+.railway/
+.render/
+*.pem
+*.key
+*.cert
+*.crt
+
+# ────────────────────────────────────────────────────────────
+# MISC
+# ────────────────────────────────────────────────────────────
+*.zip
+*.tar.gz
+*.rar
+*.7z
+.temp/
+tmp/
+temp/
+
+.wrangler/
