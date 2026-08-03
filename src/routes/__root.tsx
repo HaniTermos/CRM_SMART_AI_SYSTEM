@@ -7,6 +7,8 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import "@/styles/theme.css";
+import { ThemeProvider } from "@/components/theme-provider";
 
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
@@ -74,15 +76,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Mini AI CRM — Shop + Smart CRM" },
-      { name: "description", content: "Simple e-commerce store with an AI-powered CRM for small businesses." },
-      { name: "author", content: "Mini AI CRM" },
-      { property: "og:title", content: "Mini AI CRM" },
-      { property: "og:description", content: "Simple e-commerce store with an AI-powered CRM." },
+      { title: "SmartStore AI — Autonomous Commerce Platform" },
+      { name: "description", content: "The multi-tenant e-commerce engine powered by Gemini AI. Demand scoring, CRM pipeline, and multi-storefront management in one platform." },
+      { name: "author", content: "SmartStore AI" },
+      { property: "og:title", content: "SmartStore AI" },
+      { property: "og:description", content: "Autonomous commerce platform powered by Gemini AI." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" } as any,
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" },
       { rel: "stylesheet", href: appCss },
     ],
   }),
@@ -110,11 +115,13 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Outlet />
-        <Toaster />
-      </AuthProvider>
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <Outlet />
+          <Toaster />
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }

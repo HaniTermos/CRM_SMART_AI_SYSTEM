@@ -35,12 +35,11 @@ class DashboardService {
     const totalProducts = parseInt(productsResult.rows[0].count || 0);
 
     const categoriesResult = await db.query(
-      `SELECT COUNT(*) as count 
-       FROM categories 
-       WHERE store_id = $1`,
+      `SELECT name FROM categories WHERE store_id = $1`,
       [storeId]
     );
-    const totalCategories = parseInt(categoriesResult.rows[0].count || 0);
+    const totalCategories = categoriesResult.rows.length;
+    const categoryNames = categoriesResult.rows.map(r => r.name);
 
     const stockResult = await db.query(
       `SELECT COUNT(*) as count 
@@ -77,6 +76,7 @@ class DashboardService {
       // Fields expected by the frontend KPI cards
       products: totalProducts,
       categories: totalCategories,
+      categoryNames,
       orders: totalOrders,
       customers: totalCustomers,
     };
