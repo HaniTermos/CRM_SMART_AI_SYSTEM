@@ -1,17 +1,14 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence } from "framer-motion";
-
 import { PageLoader } from "../components/homepage/PageLoader";
 import { SplashCursor } from "../components/homepage/SplashCursor";
-import { Navbar } from "../components/Navbar";
 import { HeroSection } from "../components/homepage/HeroSection";
 import { MagicBento } from "../components/homepage/MagicBento";
 import { HorizontalGallery } from "../components/homepage/HorizontalGallery";
 import { CurvedLoop } from "../components/homepage/CurvedLoop";
 import { PricingFlipCards } from "../components/homepage/PricingFlipCards";
 import { FAQSection } from "../components/homepage/FAQSection";
-import { FooterSection } from "../components/homepage/FooterSection";
 import { useSmoothScroll } from "../hooks/useSmoothScroll";
 
 export const Route = createFileRoute("/")({
@@ -43,14 +40,12 @@ function HomePage() {
           />
 
           <main className="relative bg-[#F9FAFB] text-slate-900 overflow-x-hidden">
-            <Navbar />
             <HeroSection />
             <MagicBento />
             <HorizontalGallery />
             <CurvedLoop />
             <PricingFlipCards />
             <FAQSection />
-            <FooterSection />
           </main>
         </>
       )}
