@@ -1,6 +1,15 @@
 const { GoogleGenAI } = require('@google/genai');
+<<<<<<< HEAD
 const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+=======
+
+// Initialize the SDK. It reads GOOGLE_API_KEY from env automatically,
+// but we pass it explicitly for clarity.
+const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
+
+const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+>>>>>>> ebf8e96b94724af6123191fffecb645770df3e69
 
 class AiService {
   static async generateInsight(store, customer, orders) {
@@ -11,10 +20,15 @@ class AiService {
       `- Order #${o.order_number}: $${o.total}, status: ${o.status}, date: ${new Date(o.created_at).toLocaleDateString()}`
     ).join('\n');
 
+<<<<<<< HEAD
+=======
+    // If API key exists, call Gemini for a real insight
+>>>>>>> ebf8e96b94724af6123191fffecb645770df3e69
     if (apiKey) {
       try {
         const prompt = `You are an expert e-commerce CRM analyst.
 
+<<<<<<< HEAD
         Store: ${store.name}
         Customer: ${customer.name} (${customer.email || 'no email'})
         Phone: ${customer.phone}
@@ -34,6 +48,27 @@ class AiService {
         - recommendations (array of strings): 2-3 short recommendation tags (e.g. ["10% Discount", "Upsell New Arrivals"])
 
         Output ONLY valid JSON.`;
+=======
+Store: ${store.name}
+Customer: ${customer.name} (${customer.email || 'no email'})
+Phone: ${customer.phone}
+Total spent: $${customer.total_spent}
+Total orders: ${customer.total_orders}
+Segment: ${customer.segment || 'unknown'}
+Last order: ${customer.last_order_at ? new Date(customer.last_order_at).toLocaleDateString() : 'never'}
+
+Recent orders:
+${ordersContext || 'No orders on record.'}
+
+Generate a JSON object with exactly these fields:
+- summary (string): a brief behavioral analysis of this customer
+- next_action (string): one concrete next step the store owner should take
+- email_subject (string): a catchy subject line for a follow-up email
+- email_body (string): a short, personalized email body (2-4 sentences)
+- recommendations (array of strings): 2-3 short recommendation tags (e.g. ["10% Discount", "Upsell New Arrivals"])
+
+Output ONLY valid JSON.`;
+>>>>>>> ebf8e96b94724af6123191fffecb645770df3e69
 
         const response = await ai.models.generateContent({
           model,
@@ -60,6 +95,10 @@ class AiService {
       }
     }
 
+<<<<<<< HEAD
+=======
+    // Static fallback when no key or request failed
+>>>>>>> ebf8e96b94724af6123191fffecb645770df3e69
     return {
       kind: 'customer_analysis',
       summary: `Customer ${customer.name} has placed ${orders.length} orders totaling $${customer.total_spent}. They prefer COD.`,
@@ -75,6 +114,11 @@ class AiService {
     const model = DEFAULT_MODEL;
     const apiKey = process.env.GOOGLE_API_KEY;
     const suggestedPrice = targetPrice || 19.99;
+<<<<<<< HEAD
+=======
+
+    // --- Heuristic Baseline ---
+>>>>>>> ebf8e96b94724af6123191fffecb645770df3e69
     const db = require('../config/database');
 
     const keyword = idea.split(' ')[0] || idea;
@@ -105,10 +149,15 @@ class AiService {
       console.error('[AI] Heuristic DB query failed:', dbErr);
     }
 
+<<<<<<< HEAD
+=======
+    // If API key is provided, call Gemini for a real analysis
+>>>>>>> ebf8e96b94724af6123191fffecb645770df3e69
     if (apiKey) {
       try {
         const prompt = `You are an expert e-commerce demand analyst.
 
+<<<<<<< HEAD
         Store Name: ${store.name}
         Product Idea: ${idea}
         Target Price: $${suggestedPrice}
@@ -124,6 +173,23 @@ class AiService {
         - risks (array of strings): 2-3 potential risks or barriers to entry
 
         Output ONLY valid JSON.`;
+=======
+Store Name: ${store.name}
+Product Idea: ${idea}
+Target Price: $${suggestedPrice}
+Historical Velocity for similar items: ${velocityData.avg_units} units.
+
+Analyze the market demand and output ONLY a valid JSON object with exactly these fields:
+- score (integer 0-100)
+- summary (string)
+- next_action (string)
+- confidence (string: High, Medium, or Low)
+- positioning (string): one sentence on how to market this product
+- target_segments (array of strings): 2-3 customer types who would buy this
+- risks (array of strings): 2-3 potential risks or barriers to entry
+
+Output ONLY valid JSON.`;
+>>>>>>> ebf8e96b94724af6123191fffecb645770df3e69
 
         const response = await ai.models.generateContent({
           model,
@@ -175,6 +241,11 @@ class AiService {
 
   static isInScope(query) {
     const lower = query.toLowerCase();
+<<<<<<< HEAD
+=======
+
+    // In-scope keywords for SmartStore AI
+>>>>>>> ebf8e96b94724af6123191fffecb645770df3e69
     const inScope = [
       'product', 'products', 'inventory', 'stock', 'category', 'categories',
       'order', 'orders', 'customer', 'customers', 'crm', 'pipeline', 'deal', 'deals',
@@ -204,13 +275,21 @@ class AiService {
     const hasInScope = inScope.some((k) => lower.includes(k));
     const hasOutOfScope = outOfScope.some((k) => lower.includes(k));
 
+<<<<<<< HEAD
     if (hasOutOfScope && !hasInScope) return false;
+=======
+    // If explicitly out-of-topic keywords are present and no in-scope ones, reject
+    if (hasOutOfScope && !hasInScope) return false;
+
+    // Default: allow (Gemini + system prompt will handle edge cases)
+>>>>>>> ebf8e96b94724af6123191fffecb645770df3e69
     return true;
   }
 
   static buildSystemPrompt(context) {
     const base = `You are SmartStore AI, an embedded commerce assistant inside the SmartStore AI platform.
 
+<<<<<<< HEAD
     Your job is to help merchants use SmartStore AI effectively. You are ONLY allowed to answer questions related to the store and its workflows.
 
     Allowed topics:
@@ -282,6 +361,79 @@ class AiService {
       - Redeeming deals and generating coupon codes
       - Customer-deal linking strategies
       - Keep responses focused on sales pipeline management.`,
+=======
+Your job is to help merchants use SmartStore AI effectively. You are ONLY allowed to answer questions related to the store and its workflows.
+
+Allowed topics:
+- Dashboard metrics and KPIs
+- Products, categories, and inventory
+- Orders and order tracking
+- Customers, segments, and CRM pipeline
+- Reviews and ratings
+- Discounts and coupons
+- Email campaigns and subject lines
+- AI insights and demand scoring
+- Reports and store settings
+
+Rules:
+- Stay inside the SmartStore AI domain at all times.
+- Never present yourself as a general assistant for coding, essays, homework, travel, or unrelated life advice.
+- If the user asks an unrelated question, politely say you are focused on store operations and marketing inside SmartStore AI.
+- Prefer short, practical, action-oriented answers.
+- When possible, suggest the next action the merchant can take in the system.
+- Never invent features the platform does not have.`;
+
+    const contexts = {
+      campaigns: `\n\nYou are currently on the Email Campaigns screen.
+Help the merchant with:
+- Writing catchy subject lines and preview text
+- Drafting email body copy in HTML
+- Suggesting target segments for campaigns
+- A/B test ideas for subject lines
+- Email timing and frequency recommendations
+- Keep responses focused on email marketing for e-commerce stores.`,
+
+      demand: `\n\nYou are currently on the Demand Scoring screen.
+Help the merchant with:
+- Refining product ideas for better market fit
+- Explaining demand scores and what they mean
+- Suggesting pricing strategies
+- Identifying target customer segments for new products
+- Recommending launch timing and inventory levels
+- Keep responses focused on product demand analysis.`,
+
+      reports: `\n\nYou are currently on the Reports screen.
+Help the merchant with:
+- Interpreting revenue trends and daily sales patterns
+- Understanding customer segment performance
+- Identifying top-selling products and categories
+- Recommending actions based on report data
+- Keep responses focused on analytics and business intelligence.`,
+
+      customers: `\n\nYou are currently on the Customers screen.
+Help the merchant with:
+- Suggesting follow-up actions for specific customer segments
+- Recommending re-engagement strategies
+- Explaining customer lifetime value and segmentation
+- Drafting personalized outreach messages
+- Keep responses focused on customer relationship management.`,
+
+      products: `\n\nYou are currently on the Products screen.
+Help the merchant with:
+- Writing product descriptions and names
+- Suggesting pricing and categorization
+- Recommending inventory stocking levels
+- SEO-friendly product title suggestions
+- Keep responses focused on product management.`,
+
+      crm: `\n\nYou are currently on the CRM Pipeline screen.
+Help the merchant with:
+- Moving deals through pipeline stages
+- Suggesting next actions for open deals
+- Redeeming deals and generating coupon codes
+- Customer-deal linking strategies
+- Keep responses focused on sales pipeline management.`,
+>>>>>>> ebf8e96b94724af6123191fffecb645770df3e69
     };
 
     return base + (contexts[context] || '');
@@ -295,6 +447,10 @@ class AiService {
       throw new Error('Gemini API key not configured. Set GOOGLE_API_KEY in your .env file.');
     }
 
+<<<<<<< HEAD
+=======
+    // Guardrail: check scope before calling Gemini
+>>>>>>> ebf8e96b94724af6123191fffecb645770df3e69
     if (!this.isInScope(prompt)) {
       return {
         text: "I'm here to help with SmartStore AI workflows like products, orders, customers, campaigns, reports, and AI insights. Ask me about your store and I'll help from there.",
@@ -323,6 +479,7 @@ class AiService {
 
     const prompt = `You are an expert e-commerce email marketer.
 
+<<<<<<< HEAD
     Store: ${store.name}
     Target audience: ${segment || 'all customers'}
     Campaign description: ${description}
@@ -334,6 +491,19 @@ class AiService {
     - target_segment (string): one of [new, active, vip, at_risk, churned] or empty string if all customers
 
     Output ONLY valid JSON.`;
+=======
+Store: ${store.name}
+Target audience: ${segment || 'all customers'}
+Campaign description: ${description}
+
+Generate a JSON object with exactly these fields:
+- name (string): a catchy campaign name (max 60 chars)
+- subject (string): an engaging email subject line (max 80 chars)
+- content_html (string): a professional marketing email in HTML format. Use inline styles sparingly. Include a greeting, body, CTA button text, and sign-off. Use {{name}} as the customer name placeholder.
+- target_segment (string): one of [new, active, vip, at_risk, churned] or empty string if all customers
+
+Output ONLY valid JSON.`;
+>>>>>>> ebf8e96b94724af6123191fffecb645770df3e69
 
     if (apiKey) {
       try {
