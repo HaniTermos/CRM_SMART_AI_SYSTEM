@@ -5,34 +5,59 @@ export interface ColorBendsProps {
   speed?: number;
   colors?: string[];
   transparent?: boolean;
-  autoRotate?: number;
   scale?: number;
   frequency?: number;
   warpStrength?: number;
-  mouseInfluence?: number;
-  parallax?: number;
-  noise?: number;
-  iterations?: number;
   intensity?: number;
   bandWidth?: number;
   opacity?: number;
 }
 
+const DEFAULT_COLORS = ['#CF00FF', '#00E0FF', '#03CF94', '#190E85'];
+
 export function ColorBends({
   rotation = 90,
   speed = 0.75,
-  colors = ['#CF00FF', '#00E0FF', '#03CF94', '#190E85'],
+  colors = DEFAULT_COLORS,
   transparent = true,
   scale = 1,
   frequency = 1,
   warpStrength = 1,
-  mouseInfluence = 1,
-  parallax = 0.5,
   intensity = 1.5,
   bandWidth = 6,
   opacity = 1,
 }: ColorBendsProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const timeRef = useRef(0);
+  const animFrameRef = useRef<number | null>(null);
+  const lastTimeRef = useRef<number | null>(null);
+
+  // Keep latest props in a ref to avoid resetting the animation loop on prop updates
+  const propsRef = useRef({
+    rotation,
+    speed,
+    colors,
+    transparent,
+    scale,
+    frequency,
+    warpStrength,
+    intensity,
+    bandWidth,
+  });
+
+  useEffect(() => {
+    propsRef.current = {
+      rotation,
+      speed,
+      colors,
+      transparent,
+      scale,
+      frequency,
+      warpStrength,
+      intensity,
+      bandWidth,
+    };
+  }, [rotation, speed, colors, transparent, scale, frequency, warpStrength, intensity, bandWidth]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -40,9 +65,7 @@ export function ColorBends({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animFrame: number;
-    let time = 0;
-    let mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
+    let isPaused = false;
 
     const resize = () => {
       canvas.width = canvas.offsetWidth;
@@ -51,20 +74,21 @@ export function ColorBends({
     resize();
     window.addEventListener('resize', resize);
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      mouse.targetX = (e.clientX - rect.left - rect.width / 2) * (mouseInfluence * 0.05);
-      mouse.targetY = (e.clientY - rect.top - rect.height / 2) * (mouseInfluence * 0.05);
-    };
+    const render = (timestamp: number) => {
+      if (isPaused) return;
 
-    window.addEventListener('mousemove', handleMouseMove);
+      if (lastTimeRef.current === null) {
+        lastTimeRef.current = timestamp;
+      }
+      const delta = (timestamp - lastTimeRef.current) / 1000;
+      lastTimeRef.current = timestamp;
 
-    const render = () => {
-      time += 0.005 * speed;
+      // Accumulate time continuously — timeRef.current persists forever and never resets to 0
+      const currentSpeed = propsRef.current.speed;
+      timeRef.current += delta * currentSpeed;
 
-      // Smooth mouse lerp
-      mouse.x += (mouse.targetX - mouse.x) * 0.05;
-      mouse.y += (mouse.targetY - mouse.y) * 0.05;
+      const time = timeRef.current;
+      const { rotation, colors, scale, frequency, warpStrength, intensity, bandWidth } = propsRef.current;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -72,19 +96,18 @@ export function ColorBends({
       const h = canvas.height;
       const rad = (rotation * Math.PI) / 180;
 
-      // React Bits Background Studio shader wave synthesis
+      // Continuous mathematical wave synthesis (infinite, smooth, non-cursor-driven)
       for (let b = 0; b < bandWidth; b++) {
         const offset = (b / bandWidth) * Math.PI * 2;
         const color = colors[b % colors.length];
 
-        const cx = w / 2 + Math.sin(time * frequency + offset) * 160 * scale + mouse.x * parallax;
-        const cy = h / 2 + Math.cos(time * 0.8 * frequency + offset * 1.5) * 140 * scale + mouse.y * parallax;
-        const rx = (w * 0.45 * scale + Math.sin(time + offset) * 80 * warpStrength);
-        const ry = (h * 0.4 * scale + Math.cos(time * 1.2 + offset) * 70 * warpStrength);
+        const cx = w / 2 + Math.sin(time * frequency + offset) * 160 * scale;
+        const cy = h / 2 + Math.cos(time * 0.8 * frequency + offset * 1.5) * 140 * scale;
+        const rx = w * 0.45 * scale + Math.sin(time + offset) * 80 * warpStrength;
+        const ry = h * 0.4 * scale + Math.cos(time * 1.2 + offset) * 70 * warpStrength;
 
         const grad = ctx.createRadialGradient(cx, cy, 20, cx, cy, Math.max(rx, ry));
-        
-        // Convert hex color to rgba for smooth gradient transparency
+
         grad.addColorStop(0, hexToRgba(color, 0.22 * intensity));
         grad.addColorStop(0.5, hexToRgba(color, 0.1 * intensity));
         grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
@@ -101,17 +124,38 @@ export function ColorBends({
         ctx.restore();
       }
 
-      animFrame = requestAnimationFrame(render);
+      animFrameRef.current = requestAnimationFrame(render);
     };
 
-    animFrame = requestAnimationFrame(render);
+    // Handle page visibility correctly using document.visibilitychange
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        isPaused = true;
+        if (animFrameRef.current !== null) {
+          cancelAnimationFrame(animFrameRef.current);
+          animFrameRef.current = null;
+        }
+      } else {
+        if (isPaused) {
+          isPaused = false;
+          lastTimeRef.current = null; // Reset delta timestamp baseline so time doesn't jump
+          animFrameRef.current = requestAnimationFrame(render);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    animFrameRef.current = requestAnimationFrame(render);
 
     return () => {
       window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', handleMouseMove);
-      cancelAnimationFrame(animFrame);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (animFrameRef.current !== null) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
     };
-  }, [rotation, speed, colors, scale, frequency, warpStrength, mouseInfluence, parallax, intensity, bandWidth]);
+  }, []);
 
   return (
     <canvas

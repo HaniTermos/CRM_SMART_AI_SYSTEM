@@ -194,7 +194,7 @@ function FAQPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search questions..."
-              className="w-full pl-12 pr-5 py-4 rounded-2xl bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#190E85]/20 focus:border-[#190E85] transition-all shadow-sm"
+              className="w-full pl-12 pr-5 py-4 rounded-full bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#190E85]/20 focus:border-[#190E85] transition-all shadow-sm"
             />
           </motion.div>
         </div>
@@ -233,7 +233,7 @@ function FAQPage() {
             >
               {/* Category Header — OUTSIDE the card */}
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-9 h-9 rounded-xl bg-[#190E85]/10 flex items-center justify-center text-[#190E85]">
+                <div className="w-9 h-9 rounded-2xl bg-[#190E85]/10 flex items-center justify-center text-[#190E85]">
                   <category.icon className="w-[18px] h-[18px]" />
                 </div>
                 <h2 className="text-base font-bold text-slate-900 tracking-tight">
@@ -242,7 +242,7 @@ function FAQPage() {
               </div>
 
               {/* Card — heavily rounded, clean, flat items inside */}
-              <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+              <div className="white-glass-panel rounded-3xl overflow-hidden">
                 {category.items.map((item, itemIndex) => {
                   const itemId = `${category.id}::${item.q}`;
                   const isOpen = openId === itemId;

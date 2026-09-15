@@ -52,7 +52,7 @@ export function FooterSection() {
                   placeholder="Enter your work email"
                   className="w-full px-5 py-4 bg-white border border-slate-200 rounded-full text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#190E85] shadow-sm transition-all"
                 />
-                <SpecularButton variant="primary" className="w-full sm:w-auto shrink-0">
+                <SpecularButton href="/login" variant="primary" className="w-full sm:w-auto shrink-0">
                   <span>Get Started</span>
                   <ArrowRight className="w-4 h-4" />
                 </SpecularButton>

@@ -1,15 +1,3 @@
-<<<<<<< HEAD
-import { createFileRoute } from "@tanstack/react-router";
-import { CrmPage } from "@/components/crm/crm-page";
-
-export const Route = createFileRoute("/_admin/crm")({
-  component: CrmRoute,
-});
-
-function CrmRoute() {
-  return <CrmPage />;
-}
-=======
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -99,26 +87,20 @@ function CrmPage() {
         </Card>
       )}
 
-      <Tabs defaultValue="pipeline">
-        <TabsList>
-          <TabsTrigger value="pipeline">Pipeline CRM</TabsTrigger>
-          <TabsTrigger value="campaigns">Email Campaign</TabsTrigger>
+      <Tabs defaultValue="pipeline" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
+          <TabsTrigger value="pipeline">Sales Pipeline</TabsTrigger>
+          <TabsTrigger value="campaigns">Email Campaigns</TabsTrigger>
         </TabsList>
-
         <TabsContent value="pipeline" className="mt-6">
           {currentPipeline ? (
-            <PipelineBoard pipelineId={currentPipeline.id} storeId={store!.id} />
+            <PipelineBoard pipeline={currentPipeline} storeId={store!.id} />
           ) : (
-            !isCreatingPipeline && (
-              <div className="text-center p-12 border border-dashed rounded-lg bg-muted/20">
-                <h3 className="text-lg font-medium">No pipeline configured</h3>
-                <p className="text-muted-foreground mt-1 mb-4">Create your first sales pipeline to start tracking deals.</p>
-                <Button onClick={() => setIsCreatingPipeline(true)}>Create Pipeline</Button>
-              </div>
-            )
+            <div className="text-center p-12 border border-dashed rounded-lg">
+              <p className="text-muted-foreground">No active sales pipeline found. Click above to create one.</p>
+            </div>
           )}
         </TabsContent>
-
         <TabsContent value="campaigns" className="mt-6">
           <CampaignsManager />
         </TabsContent>
@@ -127,29 +109,19 @@ function CrmPage() {
   );
 }
 
-function PipelineBoard({ pipelineId, storeId }: { pipelineId: string, storeId: string }) {
+function PipelineBoard({ pipeline, storeId }: { pipeline: any; storeId: string }) {
   const queryClient = useQueryClient();
-  const [newStageName, setNewStageName] = useState("");
+  const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
   const [newDealTitle, setNewDealTitle] = useState("");
   const [newDealValue, setNewDealValue] = useState("");
-  const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
-  const [isDealOpen, setIsDealOpen] = useState(false);
 
-  const { data: stages } = useQuery({
-    queryKey: ["crm-stages", pipelineId],
+  const { data: deals, isLoading } = useQuery({
+    queryKey: ["crm-deals", pipeline.id],
     queryFn: async () => {
-      const res = await api.get(`/crm/${storeId}/pipelines/${pipelineId}/stages`);
+      const res = await api.get(`/crm/pipelines/${pipeline.id}/deals`);
       return res.data.data;
-    }
-  });
-
-  const { data: deals } = useQuery({
-    queryKey: ["crm-deals", pipelineId],
-    queryFn: async () => {
-      const res = await api.get(`/crm/${storeId}/deals?pipelineId=${pipelineId}`);
-      return res.data.data;
-    }
+    },
   });
 
   const { data: customers } = useQuery({
@@ -157,94 +129,85 @@ function PipelineBoard({ pipelineId, storeId }: { pipelineId: string, storeId: s
     queryFn: async () => {
       const res = await api.get(`/customers/${storeId}`);
       return res.data.data;
-    }
-  });
-
-  const createStageMut = useMutation({
-    mutationFn: async (name: string) => {
-      const res = await api.post(`/crm/${storeId}/pipelines/${pipelineId}/stages`, { name, position: stages?.length || 0 });
-      return res.data.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["crm-stages"] });
-      setNewStageName("");
-    }
   });
 
   const createDealMut = useMutation({
     mutationFn: async () => {
-      const res = await api.post(`/crm/${storeId}/deals`, {
-        pipeline_id: pipelineId,
+      const res = await api.post(`/crm/pipelines/${pipeline.id}/deals`, {
         stage_id: selectedStageId,
-        customer_id: selectedCustomerId,
         title: newDealTitle,
         value: parseFloat(newDealValue) || 0,
+        customer_id: selectedCustomerId || null,
       });
       return res.data.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["crm-deals"] });
-      setIsDealOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["crm-deals", pipeline.id] });
+      toast.success("Deal created");
+      setSelectedStageId(null);
       setNewDealTitle("");
       setNewDealValue("");
       setSelectedCustomerId(null);
-    }
+    },
   });
 
+  const updateStageMut = useMutation({
+    mutationFn: async ({ dealId, stageId }: { dealId: string; stageId: string }) => {
+      const res = await api.patch(`/crm/deals/${dealId}`, { stage_id: stageId });
+      return res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["crm-deals", pipeline.id] });
+    },
+  });
+
+  if (isLoading) return <div className="flex justify-center p-6"><Loader2 className="animate-spin" /></div>;
+
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-200px)] items-start">
-      {stages?.map((stage: any) => (
-        <div key={stage.id} className="min-w-[300px] w-[300px] bg-muted/30 rounded-lg flex flex-col max-h-full">
-          <div className="p-3 font-semibold border-b border-border/50 flex justify-between items-center bg-muted/50 rounded-t-lg">
-            {stage.name}
-            <Badge variant="secondary" className="text-xs">
-              {deals?.filter((d: any) => d.stage_id === stage.id).length || 0}
-            </Badge>
-          </div>
-          <div className="p-2 flex flex-col gap-2 flex-1 overflow-y-auto min-h-[50px]">
-            {deals?.filter((d: any) => d.stage_id === stage.id).map((deal: any) => (
-              <Card key={deal.id} className="cursor-pointer hover:border-primary/50 transition-colors">
-                <CardContent className="p-3">
-                  <div className="font-medium text-sm">{deal.title}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{deal.customer_name || 'No contact'}</div>
-                  <div className="text-sm font-semibold mt-2">${Number(deal.value).toFixed(2)}</div>
-                </CardContent>
-              </Card>
-            ))}
-            <Button 
-              variant="ghost" 
-              className="w-full text-xs text-muted-foreground mt-2"
-              onClick={() => { setSelectedStageId(stage.id); setIsDealOpen(true); }}
-            >
-              + Add Deal
+    <div className="flex gap-4 overflow-x-auto pb-4">
+      {pipeline.stages?.map((stage: any) => {
+        const stageDeals = deals?.filter((d: any) => d.stage_id === stage.id) || [];
+        return (
+          <div key={stage.id} className="w-80 shrink-0 bg-muted/40 p-4 rounded-lg flex flex-col gap-3">
+            <div className="flex justify-between items-center font-semibold">
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.color || '#3b82f6' }} />
+                {stage.name}
+              </span>
+              <Badge variant="secondary">{stageDeals.length}</Badge>
+            </div>
+
+            <div className="flex flex-col gap-2 min-h-[150px]">
+              {stageDeals.map((deal: any) => (
+                <Card key={deal.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                  <CardContent className="p-3 flex flex-col gap-1">
+                    <span className="font-medium text-sm">{deal.title}</span>
+                    <div className="flex justify-between items-center text-xs text-muted-foreground mt-2">
+                      <span className="font-semibold text-foreground">${deal.value}</span>
+                      <span>{deal.customer_name || 'No contact'}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <Button variant="ghost" className="w-full text-xs justify-start" onClick={() => setSelectedStageId(stage.id)}>
+              <Plus className="mr-1 h-3 w-3" /> Add Deal
             </Button>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
-      {/* Add Stage Column */}
-      <div className="min-w-[300px] w-[300px] bg-muted/10 border border-dashed rounded-lg p-3 flex flex-col gap-2">
-        <input 
-          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm" 
-          placeholder="New stage name" 
-          value={newStageName} 
-          onChange={e => setNewStageName(e.target.value)} 
-        />
-        <Button size="sm" onClick={() => createStageMut.mutate(newStageName)} disabled={!newStageName}>
-          Add Stage
-        </Button>
-      </div>
-
-      {/* Deal Creation Dialog */}
-      <Dialog open={isDealOpen} onOpenChange={setIsDealOpen}>
+      <Dialog open={!!selectedStageId} onOpenChange={open => !open && setSelectedStageId(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>New Deal</DialogTitle></DialogHeader>
-          <div className="flex flex-col gap-4 py-4">
+          <div className="flex flex-col gap-4 py-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Deal Title</label>
+              <label className="text-sm font-medium">Title</label>
               <input 
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3" 
-                value={newDealTitle} onChange={e => setNewDealTitle(e.target.value)} placeholder="e.g. Website Redesign" 
+                value={newDealTitle} onChange={e => setNewDealTitle(e.target.value)} placeholder="e.g. Enterprise License" 
               />
             </div>
             <div className="space-y-2">
@@ -274,4 +237,3 @@ function PipelineBoard({ pipelineId, storeId }: { pipelineId: string, storeId: s
     </div>
   );
 }
->>>>>>> ebf8e96b94724af6123191fffecb645770df3e69

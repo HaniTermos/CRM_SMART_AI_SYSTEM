@@ -88,7 +88,7 @@ function ServicesHero() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <SpecularButton variant="primary" href="/contact">
+          <SpecularButton variant="primary" href="/login">
             <span>Start Free Trial</span>
             <ArrowRight className="w-4 h-4" />
           </SpecularButton>
@@ -227,7 +227,7 @@ function ServicesBento() {
               }}
               className={`${service.span} group relative`}
             >
-              <div className="white-glass-panel h-full p-8 md:p-10 border border-white shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden">
+              <div className="white-glass-panel rounded-3xl h-full p-8 md:p-10 border border-white shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden">
                 {/* Hover gradient orb */}
                 <div
                   className={`absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br ${service.color} opacity-0 group-hover:opacity-10 blur-3xl transition-opacity duration-700 rounded-full`}
@@ -395,7 +395,7 @@ function ProcessTimeline() {
                 <div className="hidden md:block absolute top-12 left-[60%] w-[80%] h-[2px] bg-gradient-to-r from-slate-200 to-transparent" />
               )}
 
-              <div className="white-glass-panel p-8 border border-slate-100 shadow-md hover:shadow-xl transition-shadow duration-500 h-full">
+              <div className="white-glass-panel rounded-3xl p-8 border border-slate-100 shadow-md hover:shadow-xl transition-shadow duration-500 h-full">
                 <span className="text-5xl font-bold text-slate-200 font-mono block mb-6">
                   {step.number}
                 </span>
@@ -444,16 +444,16 @@ function IntegrationMarquee() {
       <div className="relative flex overflow-x-hidden">
         <motion.div
           animate={{ x: ["0%", "-50%"] }}
-          transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-          className="flex gap-6 px-6 shrink-0"
+          transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
+          className="flex items-center gap-12 md:gap-16 pr-12 md:pr-16 shrink-0"
         >
           {doubled.map((item, i) => (
-            <div
+            <span
               key={`${item}-${i}`}
-              className="white-glass-panel px-8 py-4 border border-slate-200 shadow-sm whitespace-nowrap text-slate-700 font-semibold text-sm"
+              className="whitespace-nowrap text-slate-700 font-semibold text-base md:text-lg tracking-tight select-none"
             >
               {item}
-            </div>
+            </span>
           ))}
         </motion.div>
       </div>

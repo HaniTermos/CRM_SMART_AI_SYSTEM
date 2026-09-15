@@ -128,9 +128,9 @@ function AboutPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="white-glass-navbar p-8 rounded-2xl text-center hover:shadow-lg transition-shadow duration-300"
+                className="white-glass-panel p-8 rounded-3xl text-center hover:shadow-lg transition-shadow duration-300"
               >
-                <div className="w-12 h-12 rounded-xl bg-[#190E85]/10 flex items-center justify-center text-[#190E85] mx-auto mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#190E85]/10 flex items-center justify-center text-[#190E85] mx-auto mb-4">
                   <item.icon className="w-6 h-6" />
                 </div>
                 <h3 className="font-semibold text-slate-900 mb-2">
@@ -197,9 +197,9 @@ function AboutPage() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.15 }}
-                  className="white-glass-navbar p-6 rounded-2xl flex items-start gap-4 hover:shadow-lg transition-shadow duration-300"
+                  className="white-glass-panel p-6 rounded-3xl flex items-start gap-4 hover:shadow-lg transition-shadow duration-300"
                 >
-                  <div className="p-3 rounded-xl bg-[#190E85]/10 text-[#190E85]">
+                  <div className="p-3 rounded-2xl bg-[#190E85]/10 text-[#190E85]">
                     <v.icon className="w-5 h-5" />
                   </div>
                   <div>
@@ -266,10 +266,10 @@ function AboutPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="white-glass-navbar p-8 md:p-12 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-8"
+            className="white-glass-panel p-8 md:p-12 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-8"
           >
             <div className="flex items-start gap-4">
-              <div className="p-3 rounded-xl bg-[#190E85]/10 text-[#190E85]">
+              <div className="p-3 rounded-2xl bg-[#190E85]/10 text-[#190E85]">
                 <Shield className="w-6 h-6" />
               </div>
               <div>
@@ -332,7 +332,7 @@ function AboutPage() {
                   <span>Book a demo</span>
                   <ArrowRight className="w-4 h-4" />
                 </SpecularButton>
-                <SpecularButton href="/dashboard" variant="outline">
+                <SpecularButton href="/login" variant="outline">
                   <span>Start building free</span>
                 </SpecularButton>
               </div>
@@ -343,7 +343,7 @@ function AboutPage() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
-              className="white-glass-navbar p-8 rounded-3xl"
+              className="white-glass-panel p-8 rounded-3xl"
             >
               <h3 className="text-xl font-bold text-slate-900 mb-4">
                 What happens next?

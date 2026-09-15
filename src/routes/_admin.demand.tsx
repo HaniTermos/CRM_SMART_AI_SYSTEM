@@ -1,15 +1,3 @@
-<<<<<<< HEAD
-import { createFileRoute } from "@tanstack/react-router";
-import { DemandPage } from "@/components/demand/demand-page";
-
-export const Route = createFileRoute("/_admin/demand")({
-  component: DemandRoute,
-});
-
-function DemandRoute() {
-  return <DemandPage />;
-}
-=======
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Lightbulb, TrendingUp, Zap, CircleOff } from "lucide-react";
+import { Lightbulb, Zap, CircleOff, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_admin/demand")({
@@ -98,7 +86,7 @@ function DemandPage() {
             <Lightbulb className="h-6 w-6 text-primary" /> Demand scoring
           </h1>
           <p className="mt-1 text-muted-foreground">
-            Pitch a new product idea. AI scores it against your catalog and recent buying patterns.
+            Test a product idea against sales history and market heuristics.
           </p>
         </div>
         <AiStatusBadge />
@@ -177,7 +165,7 @@ function DemandPage() {
           <Card><CardContent className="p-8 text-center text-muted-foreground">No past ideas yet.</CardContent></Card>
         ) : (
           <div className="grid gap-3">
-            {history.slice(1).map((h) => {
+            {history.slice(1).map((h: any) => {
               const r = asRecs(h.recommendations);
               return (
                 <Card key={h.id}>
@@ -243,4 +231,3 @@ function AiStatusBadge() {
     </div>
   );
 }
->>>>>>> ebf8e96b94724af6123191fffecb645770df3e69

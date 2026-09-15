@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, ChevronDown, Sparkles, TrendingUp, Users } from 'lucide-react';
 import gsap from 'gsap';
@@ -12,6 +12,8 @@ import { ColorBends } from './ColorBends';
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
+const COLOR_BENDS_COLORS = ['#CF00FF', '#00E0FF', '#03CF94'];
+
 export function HeroSection() {
   const pinRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -22,7 +24,6 @@ export function HeroSection() {
   const colorBendsRef = useRef<HTMLDivElement>(null);
   const particleRef = useRef<HTMLDivElement>(null);
   const scrollIndicatorRef = useRef<HTMLDivElement>(null);
-  const [isHeroHovered, setIsHeroHovered] = useState(false);
 
   useEffect(() => {
     const pinEl = pinRef.current;
@@ -48,29 +49,17 @@ export function HeroSection() {
         },
       });
 
-      // ═══════════════════════════════════════════════════════════
       // BAND 1 (0.00 → 0.25): INTRO — Steady state, content visible
-      // ═══════════════════════════════════════════════════════════
-      // Nothing animates here — the viewer absorbs the hero layout.
-
-      // ═══════════════════════════════════════════════════════════
       // BAND 2 (0.25 → 0.50): PARALLAX BUILD — Content compresses upward
-      // ═══════════════════════════════════════════════════════════
       tl.to(headlineGroupRef.current, { y: -15, ease: 'power1.out', duration: 0.25 }, 0.25);
       tl.to(scrollIndicatorRef.current, { opacity: 0, y: -10, duration: 0.15 }, 0.25);
 
-      // ═══════════════════════════════════════════════════════════
       // BAND 3 (0.50 → 0.75): BUILD-UP — ColorBends intensity rises, content starts forward push
-      // ═══════════════════════════════════════════════════════════
       tl.to(headlineGroupRef.current, { scale: 1.06, y: -30, ease: 'power1.in', duration: 0.25 }, 0.50);
       tl.to([ctaGroupRef.current, metricsGroupRef.current], { y: -20, opacity: 0.7, duration: 0.25 }, 0.55);
       tl.to(colorBendsRef.current, { scale: 1.08, duration: 0.25 }, 0.50);
 
-      // ═══════════════════════════════════════════════════════════
-      // BAND 4 (0.75 → 1.00): MORPH — "Going Through" forward depth tunnel push
-      //   Hero text, CTA, metrics, particles all zoom forward and dissolve.
-      //   ColorBends expands outward like the camera is flying through it.
-      // ═══════════════════════════════════════════════════════════
+      // BAND 4 (0.75 → 1.00): MORPH — Forward depth tunnel push
       tl.to(
         headlineGroupRef.current,
         { scale: 1.3, y: -70, opacity: 0, ease: 'power2.in', duration: 0.25 },
@@ -91,18 +80,16 @@ export function HeroSection() {
 
   return (
     <div ref={pinRef} id="hero" className="relative min-h-screen bg-transparent z-10">
-      {/* React Bits Background Studio: ColorBends Canvas Field */}
-      <div ref={colorBendsRef} className="absolute inset-0 origin-center">
+      {/* Background Studio: Autonomous ColorBends Canvas Field */}
+      <div ref={colorBendsRef} className="absolute inset-0 origin-center pointer-events-none">
         <ColorBends
           rotation={90}
           speed={0.75}
-          colors={['#CF00FF', '#00E0FF', '#03CF94']}
+          colors={COLOR_BENDS_COLORS}
           transparent={true}
           scale={1}
           frequency={1}
           warpStrength={1}
-          mouseInfluence={1}
-          parallax={0.5}
           intensity={1.5}
           bandWidth={6}
           opacity={1}
@@ -110,14 +97,12 @@ export function HeroSection() {
       </div>
 
       {/* Particle Field */}
-      <div ref={particleRef} className="absolute inset-0 origin-center">
+      <div ref={particleRef} className="absolute inset-0 origin-center pointer-events-none">
         <ParticleField />
       </div>
 
       <section
         ref={contentRef}
-        onMouseEnter={() => setIsHeroHovered(true)}
-        onMouseLeave={() => setIsHeroHovered(false)}
         className="relative h-screen flex flex-col justify-between pt-28 pb-12 px-6 md:px-12 max-w-7xl mx-auto overflow-hidden z-10"
       >
         {/* Top Pill Badge */}
@@ -133,7 +118,7 @@ export function HeroSection() {
 
         {/* Center Main Hero Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center my-auto">
-          {/* Left: Manrope Headline & Specular CTA */}
+          {/* Left: Headline & Specular CTA */}
           <div ref={headlineGroupRef} className="lg:col-span-8 origin-center">
             <h1 className="text-5xl sm:text-7xl md:text-8xl font-extrabold tracking-[-0.03em] text-[#190E85] leading-[1.05] mb-6">
               <div className="block overflow-hidden">
@@ -177,7 +162,7 @@ export function HeroSection() {
                 transition={{ duration: 0.8, delay: 0.45 }}
                 className="flex flex-wrap items-center gap-4"
               >
-                <SpecularButton href="/dashboard" variant="primary">
+                <SpecularButton href="/login" variant="primary">
                   <span>Start building free</span>
                   <ArrowRight className="w-4 h-4" />
                 </SpecularButton>
@@ -197,7 +182,7 @@ export function HeroSection() {
               transition={{ duration: 0.8, delay: 0.4 }}
               className="origin-center"
             >
-              <CircularBadge isHovered={isHeroHovered} />
+              <CircularBadge />
             </motion.div>
 
             <motion.div

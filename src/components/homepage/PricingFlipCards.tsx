@@ -111,7 +111,7 @@ function FlipCard({ plan, index }: { plan: Plan; index: number }) {
                 ))}
               </ul>
               <div className="mt-8">
-                <SpecularButton variant={plan.highlighted ? 'primary' : 'outline'} className="w-full">
+                <SpecularButton href="/login" variant={plan.highlighted ? 'primary' : 'outline'} className="w-full">
                   {plan.cta}
                 </SpecularButton>
               </div>

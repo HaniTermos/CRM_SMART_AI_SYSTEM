@@ -69,8 +69,8 @@ export function StaggeredMenu({ isOpen, onClose, links }: StaggeredMenuProps) {
             transition={{ delay: 0.4, duration: 0.5 }}
             className="pt-6 border-t border-slate-200"
           >
-            <SpecularButton href="/dashboard" className="w-full">
-              <span>Start building free</span>
+            <SpecularButton href="/login" onClick={onClose} className="w-full">
+              <span>Get Started</span>
               <ArrowRight className="w-4 h-4" />
             </SpecularButton>
           </motion.div>

@@ -122,9 +122,9 @@ function ContactPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="white-glass-navbar p-8 rounded-2xl text-center hover:shadow-lg transition-all duration-300 group"
+                className="white-glass-panel p-8 rounded-3xl text-center hover:shadow-lg transition-all duration-300 group"
               >
-                <div className="w-12 h-12 rounded-xl bg-[#190E85]/10 flex items-center justify-center text-[#190E85] mx-auto mb-4 group-hover:bg-[#190E85] group-hover:text-white transition-colors duration-300">
+                <div className="w-12 h-12 rounded-2xl bg-[#190E85]/10 flex items-center justify-center text-[#190E85] mx-auto mb-4 group-hover:bg-[#190E85] group-hover:text-white transition-colors duration-300">
                   <method.icon className="w-6 h-6" />
                 </div>
                 <h3 className="font-semibold text-slate-900 mb-1">
@@ -152,7 +152,7 @@ function ContactPage() {
               transition={{ duration: 0.7 }}
               className="md:col-span-3"
             >
-              <div className="white-glass-navbar p-8 md:p-10 rounded-3xl">
+              <div className="white-glass-panel p-8 md:p-10 rounded-3xl">
                 <h2 className="text-2xl font-bold text-slate-900 mb-6">
                   Send us a message
                 </h2>
@@ -283,7 +283,7 @@ function ContactPage() {
               transition={{ duration: 0.7 }}
               className="md:col-span-2 space-y-6"
             >
-              <div className="white-glass-navbar p-8 rounded-3xl">
+              <div className="white-glass-panel p-8 rounded-3xl">
                 <h3 className="text-xl font-bold text-slate-900 mb-6">
                   What happens next?
                 </h3>
@@ -306,7 +306,7 @@ function ContactPage() {
                     },
                   ].map((item) => (
                     <div key={item.title} className="flex gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-[#190E85]/10 flex items-center justify-center text-[#190E85] shrink-0">
+                      <div className="w-10 h-10 rounded-2xl bg-[#190E85]/10 flex items-center justify-center text-[#190E85] shrink-0">
                         <item.icon className="w-5 h-5" />
                       </div>
                       <div>
@@ -322,7 +322,7 @@ function ContactPage() {
                 </div>
               </div>
 
-              <div className="white-glass-navbar p-8 rounded-3xl">
+              <div className="white-glass-panel p-8 rounded-3xl">
                 <div className="flex items-center gap-3 mb-4">
                   <Clock className="w-5 h-5 text-[#190E85]" />
                   <h3 className="font-semibold text-slate-900">
@@ -385,7 +385,7 @@ function ContactPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="white-glass-navbar p-6 rounded-2xl text-center"
+                className="white-glass-panel p-6 rounded-3xl text-center"
               >
                 <h3 className="font-bold text-slate-900 mb-1">{loc.city}</h3>
                 <p className="text-sm text-[#190E85] font-medium mb-1">

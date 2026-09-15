@@ -117,7 +117,7 @@ export function PageLoader({ onComplete }: { onComplete: () => void }) {
 
               {/* Counter percentage */}
               <div className="mt-3 text-[11px] font-mono-metrics text-slate-400 tracking-widest tabular-nums">
-                {String(progress).padStart(3, '0')}%
+                {progress}%
               </div>
             </div>
           </motion.div>

@@ -1,15 +1,3 @@
-<<<<<<< HEAD
-import { createFileRoute } from "@tanstack/react-router";
-import { ReviewsPage } from "@/components/reviews/reviews-page";
-
-export const Route = createFileRoute("/_admin/reviews")({
-  component: ReviewsRoute,
-});
-
-function ReviewsRoute() {
-  return <ReviewsPage />;
-}
-=======
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -172,4 +160,3 @@ function ReviewsPage() {
     </div>
   );
 }
->>>>>>> ebf8e96b94724af6123191fffecb645770df3e69

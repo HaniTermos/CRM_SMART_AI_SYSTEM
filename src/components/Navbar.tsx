@@ -88,10 +88,10 @@ export function Navbar() {
               ))}
             </div>
 
-            {/* CTA */}
+            {/* CTA -> Backend Sign In Page */}
             <div className="hidden md:block">
               <SpecularButton
-                href="/contact"
+                href="/login"
                 variant="primary"
                 className="!py-2.5 !px-6 !text-xs"
               >

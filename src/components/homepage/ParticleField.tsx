@@ -51,8 +51,14 @@ export function ParticleField() {
     );
     observer.observe(canvas);
 
+    let isTabHidden = false;
+    const handleVisibilityChange = () => {
+      isTabHidden = document.hidden;
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     const render = () => {
-      if (!visibleRef.current) {
+      if (!visibleRef.current || isTabHidden) {
         animFrame = requestAnimationFrame(render);
         return;
       }
@@ -63,7 +69,7 @@ export function ParticleField() {
         d.y += d.vy;
         d.x += d.vx + Math.sin(d.y * 0.008) * 0.15;
 
-        // Respawn at bottom
+        // Respawn seamlessly at bottom
         if (d.y < -10) {
           d.y = canvas.height + 10;
           d.x = Math.random() * canvas.width;
@@ -85,6 +91,7 @@ export function ParticleField() {
 
     return () => {
       window.removeEventListener('resize', resize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       observer.disconnect();
       cancelAnimationFrame(animFrame);
     };
