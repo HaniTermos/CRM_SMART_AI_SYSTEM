@@ -47,3 +47,13 @@ exports.me = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.logout = async (req, res, next) => {
+  try {
+    console.log(`[AUTH LOGOUT] User ${req.user.id} (${req.user.email}) logged out at ${new Date().toISOString()}`);
+    res.json({ success: true, message: 'Logged out successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+

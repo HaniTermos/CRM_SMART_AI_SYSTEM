@@ -100,7 +100,7 @@ function OrderDetail() {
                 </tr>
               </thead>
               <tbody>
-                {items.map((i) => (
+                {items.map((i: { id: string; product_name: string; quantity: number; unit_price: number | string; subtotal: number | string }) => (
                   <tr key={i.id} className="border-b last:border-0">
                     <td className="p-3">{i.product_name}</td>
                     <td className="p-3">{i.quantity}</td>

@@ -55,18 +55,18 @@ class ProductReview {
     return result.rows;
   }
 
-  static async updateStatus(id, status) {
+  static async updateStatus(id, storeId, status) {
     const result = await db.query(
-      'UPDATE product_reviews SET status = $1 WHERE id = $2 RETURNING *',
-      [status, id]
+      'UPDATE product_reviews SET status = $1, updated_at = NOW() WHERE id = $2 AND store_id = $3 RETURNING *',
+      [status, id, storeId]
     );
     return result.rows[0] || null;
   }
 
-  static async delete(id) {
+  static async delete(id, storeId) {
     const result = await db.query(
-      'DELETE FROM product_reviews WHERE id = $1 RETURNING id',
-      [id]
+      'DELETE FROM product_reviews WHERE id = $1 AND store_id = $2 RETURNING *',
+      [id, storeId]
     );
     return result.rows[0] || null;
   }

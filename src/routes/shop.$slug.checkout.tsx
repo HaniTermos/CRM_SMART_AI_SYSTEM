@@ -11,6 +11,7 @@ import { useCart } from "@/lib/cart-context";
 import { placeOrder } from "@/lib/checkout.functions";
 import { validateDiscount } from "@/lib/discounts.functions";
 import { toast } from "sonner";
+import { getActiveTableInfo } from "@/components/shop/TableBanner";
 
 export const Route = createFileRoute("/shop/$slug/checkout")({
   component: CheckoutPage,
@@ -98,6 +99,7 @@ function CheckoutPage() {
     }
     setSubmitting(true);
     try {
+      const activeTable = getActiveTableInfo();
       const res = await placeOrderFn({
         data: {
           storeSlug: slug,
@@ -113,8 +115,11 @@ function CheckoutPage() {
           notes: form.notes || undefined,
           discount_code: applied?.code || undefined,
           items: cart.items.map((i) => ({ product_id: i.product_id, quantity: i.quantity })),
+          table_label: activeTable?.table || undefined,
+          floor_id: activeTable?.floor || undefined,
         },
       });
+
       cart.clear();
       navigate({
         to: "/shop/$slug/thanks/$orderNumber",

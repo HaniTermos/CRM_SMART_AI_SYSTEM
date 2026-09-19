@@ -1,85 +1,134 @@
 const db = require('../config/database');
+const UserDashboardLayout = require('../models/UserDashboardLayout');
 
 class DashboardService {
-  static async getMetrics(storeId) {
-    const revenueResult = await db.query(
-      `SELECT SUM(total) as revenue 
-       FROM orders 
-       WHERE store_id = $1 AND status != 'cancelled'`,
-      [storeId]
+  static async getDashboardMetrics(store_id, mode = 'today', user_id = null) {
+    const storeRes = await db.query(
+      `SELECT * FROM stores WHERE id = $1`,
+      [store_id]
     );
-    const revenue = parseFloat(revenueResult.rows[0].revenue || 0);
+    
+    if (storeRes.rows.length === 0) {
+      const err = new Error('Store not found');
+      err.status = 404;
+      throw err;
+    }
 
-    const ordersResult = await db.query(
-      `SELECT COUNT(*) as count 
-       FROM orders 
-       WHERE store_id = $1 AND status IN ('pending', 'confirmed', 'shipped')`,
-      [storeId]
-    );
-    const activeOrders = parseInt(ordersResult.rows[0].count || 0);
+    const store = storeRes.rows[0];
 
-    const totalOrdersResult = await db.query(
-      `SELECT COUNT(*) as count 
-       FROM orders 
-       WHERE store_id = $1`,
-      [storeId]
+    // Today & Yesterday Sales Aggregations
+    const salesAggRes = await db.query(
+      `SELECT
+        COALESCE(SUM(CASE WHEN DATE(created_at) = CURRENT_DATE THEN total ELSE 0 END), 0)::numeric(10,2) AS today_revenue,
+        COALESCE(SUM(CASE WHEN DATE(created_at) = CURRENT_DATE - INTERVAL '1 day' THEN total ELSE 0 END), 0)::numeric(10,2) AS yesterday_revenue,
+        COUNT(CASE WHEN DATE(created_at) = CURRENT_DATE THEN 1 END)::int AS today_total_orders,
+        COUNT(CASE WHEN DATE(created_at) = CURRENT_DATE AND status = 'delivered' THEN 1 END)::int AS today_completed_orders,
+        COUNT(CASE WHEN DATE(created_at) = CURRENT_DATE AND status IN ('pending', 'confirmed', 'shipped') THEN 1 END)::int AS today_pending_orders,
+        COUNT(CASE WHEN DATE(created_at) = CURRENT_DATE AND status = 'cancelled' THEN 1 END)::int AS today_cancelled_orders,
+        COUNT(CASE WHEN DATE(created_at) = CURRENT_DATE - INTERVAL '1 day' THEN 1 END)::int AS yesterday_orders,
+        COUNT(*)::int AS total_orders,
+        COALESCE(AVG(CASE WHEN status != 'cancelled' THEN total END), 0)::numeric(10,2) AS avg_order_value
+       FROM orders WHERE store_id = $1`,
+      [store_id]
     );
-    const totalOrders = parseInt(totalOrdersResult.rows[0].count || 0);
 
-    const productsResult = await db.query(
-      `SELECT COUNT(*) as count 
-       FROM products 
-       WHERE store_id = $1`,
-      [storeId]
-    );
-    const totalProducts = parseInt(productsResult.rows[0].count || 0);
+    const agg = salesAggRes.rows[0] || {};
+    const todayRevenue = Number(agg.today_revenue || 0);
+    const yesterdayRevenue = Number(agg.yesterday_revenue || 0);
+    const revenueComparison = yesterdayRevenue > 0 ? ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100 : 0;
 
-    const categoriesResult = await db.query(
-      `SELECT name FROM categories WHERE store_id = $1`,
-      [storeId]
-    );
-    const totalCategories = categoriesResult.rows.length;
-    const categoryNames = categoriesResult.rows.map(r => r.name);
+    const todayTotalOrders = Number(agg.today_total_orders || 0);
+    const yesterdayOrders = Number(agg.yesterday_orders || 0);
+    const orderComparison = yesterdayOrders > 0 ? ((todayTotalOrders - yesterdayOrders) / yesterdayOrders) * 100 : 0;
 
-    const stockResult = await db.query(
-      `SELECT COUNT(*) as count 
-       FROM products 
-       WHERE store_id = $1 AND stock <= 5 AND status = 'active'`,
-      [storeId]
+    // Customers Count
+    const customerRes = await db.query(
+      `SELECT COUNT(*)::int AS total_customers FROM customers WHERE store_id = $1`,
+      [store_id]
     );
-    const lowStockAlerts = parseInt(stockResult.rows[0].count || 0);
+    const totalCustomers = Number(customerRes.rows[0]?.total_customers || 0);
 
-    const customersResult = await db.query(
-      `SELECT COUNT(*) as count 
-       FROM customers 
-       WHERE store_id = $1`,
-      [storeId]
+    // KDS Active Ticket Times
+    const kdsRes = await db.query(
+      `SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (NOW() - created_at))/60), 12)::numeric(10,1) AS avg_prep_time
+       FROM kitchen_tickets WHERE store_id = $1 AND status IN ('pending', 'preparing')`,
+      [store_id]
     );
-    const totalCustomers = parseInt(customersResult.rows[0].count || 0);
+    const avgActivePrepTime = Number(kdsRes.rows[0]?.avg_prep_time || 12);
 
-    const recentOrdersResult = await db.query(
-      `SELECT o.id, o.order_number, o.total, o.status, o.created_at, c.name as customer_name 
-       FROM orders o
-       JOIN customers c ON o.customer_id = c.id
-       WHERE o.store_id = $1
-       ORDER BY o.created_at DESC
-       LIMIT 5`,
-      [storeId]
+    // Reservations Aggregations
+    const resAggRes = await db.query(
+      `SELECT status, COUNT(*)::int AS count
+       FROM reservations
+       WHERE store_id = $1 AND DATE(reservation_time) = CURRENT_DATE
+       GROUP BY status`,
+      [store_id]
     );
+
+    const reservationsBreakdown = {
+      pending: 0,
+      confirmed: 0,
+      seated: 0,
+      completed: 0,
+      noShow: 0,
+      cancelled: 0,
+    };
+
+    let tonightReservations = 0;
+    for (const r of resAggRes.rows) {
+      const cnt = Number(r.count || 0);
+      tonightReservations += cnt;
+      if (r.status in reservationsBreakdown) {
+        reservationsBreakdown[r.status] = cnt;
+      }
+    }
+
+    // User Layout Config
+    let savedLayout = [];
+    if (user_id) {
+      try {
+        const layoutRecord = await UserDashboardLayout.getLayout(user_id, store_id, mode);
+        if (layoutRecord) savedLayout = layoutRecord.layout_config;
+      } catch {
+        // Fallback if table is empty
+      }
+    }
+
+    const hasActivity = Number(agg.total_orders || 0) > 0 || tonightReservations > 0;
 
     return {
-      totalRevenue: revenue,
-      activeOrders,
-      lowStockAlerts,
+      store,
+      todayRevenue,
+      yesterdayRevenue,
+      revenueComparison,
+      todayOrders: todayTotalOrders,
+      todayTotalOrders,
+      todayCompletedOrders: Number(agg.today_completed_orders || 0),
+      todayPendingOrders: Number(agg.today_pending_orders || 0),
+      todayCancelledOrders: Number(agg.today_cancelled_orders || 0),
+      yesterdayOrders,
+      orderComparison,
+      avgOrderValue: Number(agg.avg_order_value || 0),
       totalCustomers,
-      recentOrders: recentOrdersResult.rows,
-      // Fields expected by the frontend KPI cards
-      products: totalProducts,
-      categories: totalCategories,
-      categoryNames,
-      orders: totalOrders,
-      customers: totalCustomers,
+      avgPrepTime: avgActivePrepTime,
+      avgTotalTicketTime: avgActivePrepTime + 5,
+      avgActivePrepTime,
+      tonightReservations,
+      reservationsBreakdown,
+      totalOrders: Number(agg.total_orders || 0),
+      hasActivity,
+      timezoneUsed: store.settings?.timezone || store.timezone || 'UTC',
+      mode,
+      saved_layout: savedLayout,
     };
+  }
+
+  static async getAuthenticatedStoreStats(store_id) {
+    return await this.getDashboardMetrics(store_id, 'today', null);
+  }
+
+  static async saveUserLayout(user_id, store_id, mode, layout_config) {
+    return await UserDashboardLayout.saveLayout(user_id, store_id, mode, layout_config);
   }
 }
 

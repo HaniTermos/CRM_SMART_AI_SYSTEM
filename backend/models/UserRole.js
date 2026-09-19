@@ -25,6 +25,12 @@ class UserRole {
   }
 
   static async removeMember(storeId, userId) {
+    const result = await db.query(
+      `DELETE FROM user_roles WHERE store_id = $1 AND user_id = $2 AND role != 'owner' RETURNING *`,
+      [storeId, userId]
+    );
+    if (result.rows[0]) return result.rows[0];
+
     const roleCheck = await db.query(
       'SELECT role FROM user_roles WHERE store_id = $1 AND user_id = $2',
       [storeId, userId]
@@ -33,11 +39,7 @@ class UserRole {
       throw new Error('Cannot remove the store owner.');
     }
 
-    const result = await db.query(
-      'DELETE FROM user_roles WHERE store_id = $1 AND user_id = $2 RETURNING id',
-      [storeId, userId]
-    );
-    return result.rows[0] || null;
+    return null;
   }
 
   static async findByStore(storeId) {

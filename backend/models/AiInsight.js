@@ -11,10 +11,10 @@ class AiInsight {
     return result.rows[0];
   }
 
-  static async findByCustomer(customerId) {
+  static async findByCustomer(customerId, storeId) {
     const result = await db.query(
-      'SELECT * FROM ai_insights WHERE customer_id = $1 ORDER BY created_at DESC',
-      [customerId]
+      'SELECT * FROM ai_insights WHERE customer_id = $1 AND store_id = $2 ORDER BY created_at DESC',
+      [customerId, storeId]
     );
     return result.rows;
   }

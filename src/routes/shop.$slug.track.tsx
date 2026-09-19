@@ -128,7 +128,7 @@ function OrderDetails({ result }: { result: Extract<LookupResult, { ok: true }> 
           <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Items
           </h3>
-          {items.map((i) => (
+          {items.map((i: { id: string; product_name: string; quantity: number; subtotal: number | string }) => (
             <div key={i.id} className="flex justify-between gap-2">
               <span className="truncate">
                 {i.product_name} × {i.quantity}

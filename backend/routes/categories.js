@@ -6,6 +6,8 @@ const { authenticate, requireStoreAdmin } = require('../middlewares/auth');
 router.get('/', categoryController.getAll);
 router.use(authenticate);
 router.post('/', requireStoreAdmin, categoryController.create);
+router.patch('/reorder', requireStoreAdmin, categoryController.reorder);
+router.patch('/:id', requireStoreAdmin, categoryController.update);
 router.delete('/:id', requireStoreAdmin, categoryController.delete);
 
 module.exports = router;

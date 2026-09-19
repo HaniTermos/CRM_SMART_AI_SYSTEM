@@ -10,29 +10,13 @@ const createValidation = [
   body('comment').optional({ nullable: true }).isString()
 ];
 
-exports.create = [
-  ...createValidation,
-  validate,
-  async (req, res, next) => {
-    try {
-      const review = await ProductReview.create({
-        store_id: req.params.storeId,
-        ...req.body
-      });
-      res.status(201).json({ success: true, data: review });
-    } catch (error) {
-      next(error);
-    }
-  }
-];
-
 exports.createPublic = [
   ...createValidation,
   validate,
   async (req, res, next) => {
     try {
       const db = require('../config/database');
-      const storeRes = await db.query('SELECT id FROM stores WHERE slug = $1', [req.params.storeId]);
+      const storeRes = await db.query('SELECT id FROM stores WHERE slug = $1', [req.params.storeSlug]);
       if (storeRes.rows.length === 0) {
         return res.status(404).json({ error: 'Store not found' });
       }
@@ -53,7 +37,8 @@ exports.createPublic = [
 exports.getAll = async (req, res, next) => {
   try {
     const { status } = req.query;
-    const reviews = await ProductReview.findByStore(req.params.storeId, status);
+    const storeId = req.storeId || req.params.storeId;
+    const reviews = await ProductReview.findByStore(storeId, status);
     res.json({ success: true, data: reviews });
   } catch (error) {
     next(error);
@@ -65,7 +50,8 @@ exports.updateStatus = [
   validate,
   async (req, res, next) => {
     try {
-      const review = await ProductReview.updateStatus(req.params.id, req.body.status);
+      const storeId = req.storeId || req.params.storeId;
+      const review = await ProductReview.updateStatus(req.params.id, storeId, req.body.status);
       if (!review) return res.status(404).json({ error: 'Review not found' });
       res.json({ success: true, data: review });
     } catch (error) {
@@ -76,7 +62,8 @@ exports.updateStatus = [
 
 exports.delete = async (req, res, next) => {
   try {
-    const deleted = await ProductReview.delete(req.params.id);
+    const storeId = req.storeId || req.params.storeId;
+    const deleted = await ProductReview.delete(req.params.id, storeId);
     if (!deleted) return res.status(404).json({ error: 'Review not found' });
     res.json({ success: true, data: { deleted: true } });
   } catch (error) {

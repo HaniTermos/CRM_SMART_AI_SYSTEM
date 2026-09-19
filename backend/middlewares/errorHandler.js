@@ -1,7 +1,5 @@
 const errorHandler = (err, req, res, next) => {
-  console.error('[ERROR]', err);
-
-  let statusCode = err.statusCode || 500;
+  let statusCode = err.statusCode || err.status || 500;
   let message = err.message || 'Internal server error';
   let errors = null;
 
@@ -29,6 +27,15 @@ const errorHandler = (err, req, res, next) => {
   if (err.code === '23503') {
     statusCode = 400;
     message = 'Referenced record does not exist';
+  }
+
+  const method = req.method || 'UNKNOWN';
+  const url = req.originalUrl || req.url || 'unknown';
+  const detailsStr = errors ? ` | Details: ${JSON.stringify(errors)}` : '';
+
+  console.error(`❌ [BACKEND ERROR ${statusCode}] ${method} ${url} - ${message}${detailsStr}`);
+  if (err.stack && process.env.NODE_ENV !== 'test') {
+    console.error(err.stack);
   }
 
   res.status(statusCode).json({

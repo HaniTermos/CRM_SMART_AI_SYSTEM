@@ -11,6 +11,15 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
+interface ReviewItem {
+  id: string;
+  author_name: string;
+  rating: number;
+  comment?: string;
+  verified_purchase?: boolean;
+  created_at: string;
+}
+
 export function ProductReviews({
   storeSlug,
   productId,
@@ -20,7 +29,7 @@ export function ProductReviews({
 }) {
   const qc = useQueryClient();
 
-  const { data: reviews = [] } = useQuery({
+  const { data: rawReviews = [] } = useQuery({
     queryKey: ["public-reviews", productId],
     queryFn: async () => {
       const res = await api.get(`/public/products/${productId}/reviews`);
@@ -28,9 +37,11 @@ export function ProductReviews({
     },
   });
 
+  const reviews: ReviewItem[] = rawReviews;
+
   const avg =
     reviews.length > 0
-      ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+      ? reviews.reduce((s: number, r: ReviewItem) => s + r.rating, 0) / reviews.length
       : 0;
 
   const [showForm, setShowForm] = useState(false);

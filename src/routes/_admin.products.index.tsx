@@ -64,7 +64,7 @@ function ProductsList() {
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {products.map((p) => (
+          {products.map((p: { id: string; name: string; price: number | string; image_url?: string; status?: string; is_available?: boolean; slug?: string; stock?: number }) => (
             <Card key={p.id} className="overflow-hidden">
               {p.image_url ? (
                 <img src={p.image_url} alt={p.name} className="aspect-video w-full object-cover" />
@@ -79,7 +79,7 @@ function ProductsList() {
                     <p className="truncate font-semibold">{p.name}</p>
                     <p className="text-xs text-muted-foreground">{p.slug}</p>
                   </div>
-                  <StatusBadge status={p.status} />
+                  <StatusBadge status={p.status ?? "active"} />
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">

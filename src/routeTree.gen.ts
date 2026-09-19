@@ -10,47 +10,94 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as KdsRouteImport } from './routes/kds'
+import { Route as CmsV3RouteImport } from './routes/cms-v3'
+import { Route as EditorRouteImport } from './routes/_editor'
 import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CmsV3IndexRouteImport } from './routes/cms-v3.index'
 import { Route as ShopSlugRouteImport } from './routes/shop.$slug'
 import { Route as AdminStaffRouteImport } from './routes/_admin.staff'
 import { Route as AdminSettingsRouteImport } from './routes/_admin.settings'
 import { Route as AdminReviewsRouteImport } from './routes/_admin.reviews'
 import { Route as AdminReservationsRouteImport } from './routes/_admin.reservations'
 import { Route as AdminReportsRouteImport } from './routes/_admin.reports'
+import { Route as AdminQrManagerRouteImport } from './routes/_admin.qr-manager'
 import { Route as AdminOrdersRouteImport } from './routes/_admin.orders'
 import { Route as AdminOnboardingRouteImport } from './routes/_admin.onboarding'
 import { Route as AdminMenuRouteImport } from './routes/_admin.menu'
 import { Route as AdminLoyaltyRouteImport } from './routes/_admin.loyalty'
 import { Route as AdminKitchenRouteImport } from './routes/_admin.kitchen'
 import { Route as AdminInventoryRouteImport } from './routes/_admin.inventory'
+import { Route as AdminGrowthRouteImport } from './routes/_admin.growth'
 import { Route as AdminFloorRouteImport } from './routes/_admin.floor'
 import { Route as AdminDiscountsRouteImport } from './routes/_admin.discounts'
 import { Route as AdminDemandRouteImport } from './routes/_admin.demand'
 import { Route as AdminDashboardRouteImport } from './routes/_admin.dashboard'
 import { Route as AdminCustomersRouteImport } from './routes/_admin.customers'
 import { Route as AdminCrmRouteImport } from './routes/_admin.crm'
+import { Route as AdminCmsRouteImport } from './routes/_admin.cms'
 import { Route as AdminCategoriesRouteImport } from './routes/_admin.categories'
 import { Route as AdminCampaignsRouteImport } from './routes/_admin.campaigns'
+import { Route as AdminAiInsightsRouteImport } from './routes/_admin.ai-insights'
 import { Route as AdminAiRouteImport } from './routes/_admin.ai'
 import { Route as ShopSlugIndexRouteImport } from './routes/shop.$slug.index'
 import { Route as AdminProductsIndexRouteImport } from './routes/_admin.products.index'
 import { Route as AdminOrdersIndexRouteImport } from './routes/_admin.orders.index'
 import { Route as AdminCustomersIndexRouteImport } from './routes/_admin.customers.index'
+import { Route as AdminCmsIndexRouteImport } from './routes/_admin.cms.index'
 import { Route as ShopSlugTrackRouteImport } from './routes/shop.$slug.track'
 import { Route as ShopSlugDealsRouteImport } from './routes/shop.$slug.deals'
 import { Route as ShopSlugCheckoutRouteImport } from './routes/shop.$slug.checkout'
 import { Route as ShopSlugCartRouteImport } from './routes/shop.$slug.cart'
+import { Route as CmsV3WebsiteVersionsRouteImport } from './routes/cms-v3.website.versions'
+import { Route as CmsV3WebsiteThemeRouteImport } from './routes/cms-v3.website.theme'
+import { Route as CmsV3WebsiteTemplatesRouteImport } from './routes/cms-v3.website.templates'
+import { Route as CmsV3WebsiteSettingsRouteImport } from './routes/cms-v3.website.settings'
+import { Route as CmsV3WebsiteSeoRouteImport } from './routes/cms-v3.website.seo'
+import { Route as CmsV3WebsitePagesRouteImport } from './routes/cms-v3.website.pages'
+import { Route as CmsV3WebsiteNavigationRouteImport } from './routes/cms-v3.website.navigation'
+import { Route as CmsV3WebsiteMediaRouteImport } from './routes/cms-v3.website.media'
+import { Route as CmsV3WebsiteFormsRouteImport } from './routes/cms-v3.website.forms'
+import { Route as CmsV3WebsiteAppointmentsRouteImport } from './routes/cms-v3.website.appointments'
+import { Route as CmsV3WebsiteAnnouncementsRouteImport } from './routes/cms-v3.website.announcements'
+import { Route as CmsV3WebsiteAiRouteImport } from './routes/cms-v3.website.ai'
 import { Route as AdminProductsNewRouteImport } from './routes/_admin.products.new'
 import { Route as AdminProductsIdRouteImport } from './routes/_admin.products.$id'
 import { Route as AdminOrdersIdRouteImport } from './routes/_admin.orders.$id'
 import { Route as AdminCustomersIdRouteImport } from './routes/_admin.customers.$id'
+import { Route as AdminCmsNavigationRouteImport } from './routes/_admin.cms.navigation'
+import { Route as AdminCmsMenuPresentationRouteImport } from './routes/_admin.cms.menu-presentation'
+import { Route as AdminCmsMediaRouteImport } from './routes/_admin.cms.media'
+import { Route as AdminCmsContactMessagesRouteImport } from './routes/_admin.cms.contact-messages'
+import { Route as AdminCmsBrandRouteImport } from './routes/_admin.cms.brand'
+import { Route as AdminCmsAppointmentsRouteImport } from './routes/_admin.cms.appointments'
+import { Route as AdminCmsAnnouncementsRouteImport } from './routes/_admin.cms.announcements'
+import { Route as AdminCmsPagesIndexRouteImport } from './routes/_admin.cms.pages.index'
 import { Route as ShopSlugThanksOrderNumberRouteImport } from './routes/shop.$slug.thanks.$orderNumber'
+import { Route as ShopSlugPagesPageSlugRouteImport } from './routes/shop.$slug.pages.$pageSlug'
 import { Route as ShopSlugPProductSlugRouteImport } from './routes/shop.$slug.p.$productSlug'
+import { Route as CmsV3WebsiteContentCollectionsRouteImport } from './routes/cms-v3.website.content.collections'
+import { Route as EditorCmsV3EditorPageIdRouteImport } from './routes/_editor.cms-v3.editor.$pageId'
+import { Route as AdminCmsPagesPageIdEditRouteImport } from './routes/_admin.cms.pages.$pageId.edit'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KdsRoute = KdsRouteImport.update({
+  id: '/kds',
+  path: '/kds',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CmsV3Route = CmsV3RouteImport.update({
+  id: '/cms-v3',
+  path: '/cms-v3',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EditorRoute = EditorRouteImport.update({
+  id: '/_editor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -61,6 +108,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const CmsV3IndexRoute = CmsV3IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CmsV3Route,
 } as any)
 const ShopSlugRoute = ShopSlugRouteImport.update({
   id: '/shop/$slug',
@@ -90,6 +142,11 @@ const AdminReservationsRoute = AdminReservationsRouteImport.update({
 const AdminReportsRoute = AdminReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminQrManagerRoute = AdminQrManagerRouteImport.update({
+  id: '/qr-manager',
+  path: '/qr-manager',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminOrdersRoute = AdminOrdersRouteImport.update({
@@ -122,6 +179,11 @@ const AdminInventoryRoute = AdminInventoryRouteImport.update({
   path: '/inventory',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminGrowthRoute = AdminGrowthRouteImport.update({
+  id: '/growth',
+  path: '/growth',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminFloorRoute = AdminFloorRouteImport.update({
   id: '/floor',
   path: '/floor',
@@ -152,6 +214,11 @@ const AdminCrmRoute = AdminCrmRouteImport.update({
   path: '/crm',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCmsRoute = AdminCmsRouteImport.update({
+  id: '/cms',
+  path: '/cms',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
@@ -160,6 +227,11 @@ const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
 const AdminCampaignsRoute = AdminCampaignsRouteImport.update({
   id: '/campaigns',
   path: '/campaigns',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAiInsightsRoute = AdminAiInsightsRouteImport.update({
+  id: '/ai-insights',
+  path: '/ai-insights',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAiRoute = AdminAiRouteImport.update({
@@ -187,6 +259,11 @@ const AdminCustomersIndexRoute = AdminCustomersIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminCustomersRoute,
 } as any)
+const AdminCmsIndexRoute = AdminCmsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminCmsRoute,
+} as any)
 const ShopSlugTrackRoute = ShopSlugTrackRouteImport.update({
   id: '/track',
   path: '/track',
@@ -206,6 +283,68 @@ const ShopSlugCartRoute = ShopSlugCartRouteImport.update({
   id: '/cart',
   path: '/cart',
   getParentRoute: () => ShopSlugRoute,
+} as any)
+const CmsV3WebsiteVersionsRoute = CmsV3WebsiteVersionsRouteImport.update({
+  id: '/website/versions',
+  path: '/website/versions',
+  getParentRoute: () => CmsV3Route,
+} as any)
+const CmsV3WebsiteThemeRoute = CmsV3WebsiteThemeRouteImport.update({
+  id: '/website/theme',
+  path: '/website/theme',
+  getParentRoute: () => CmsV3Route,
+} as any)
+const CmsV3WebsiteTemplatesRoute = CmsV3WebsiteTemplatesRouteImport.update({
+  id: '/website/templates',
+  path: '/website/templates',
+  getParentRoute: () => CmsV3Route,
+} as any)
+const CmsV3WebsiteSettingsRoute = CmsV3WebsiteSettingsRouteImport.update({
+  id: '/website/settings',
+  path: '/website/settings',
+  getParentRoute: () => CmsV3Route,
+} as any)
+const CmsV3WebsiteSeoRoute = CmsV3WebsiteSeoRouteImport.update({
+  id: '/website/seo',
+  path: '/website/seo',
+  getParentRoute: () => CmsV3Route,
+} as any)
+const CmsV3WebsitePagesRoute = CmsV3WebsitePagesRouteImport.update({
+  id: '/website/pages',
+  path: '/website/pages',
+  getParentRoute: () => CmsV3Route,
+} as any)
+const CmsV3WebsiteNavigationRoute = CmsV3WebsiteNavigationRouteImport.update({
+  id: '/website/navigation',
+  path: '/website/navigation',
+  getParentRoute: () => CmsV3Route,
+} as any)
+const CmsV3WebsiteMediaRoute = CmsV3WebsiteMediaRouteImport.update({
+  id: '/website/media',
+  path: '/website/media',
+  getParentRoute: () => CmsV3Route,
+} as any)
+const CmsV3WebsiteFormsRoute = CmsV3WebsiteFormsRouteImport.update({
+  id: '/website/forms',
+  path: '/website/forms',
+  getParentRoute: () => CmsV3Route,
+} as any)
+const CmsV3WebsiteAppointmentsRoute =
+  CmsV3WebsiteAppointmentsRouteImport.update({
+    id: '/website/appointments',
+    path: '/website/appointments',
+    getParentRoute: () => CmsV3Route,
+  } as any)
+const CmsV3WebsiteAnnouncementsRoute =
+  CmsV3WebsiteAnnouncementsRouteImport.update({
+    id: '/website/announcements',
+    path: '/website/announcements',
+    getParentRoute: () => CmsV3Route,
+  } as any)
+const CmsV3WebsiteAiRoute = CmsV3WebsiteAiRouteImport.update({
+  id: '/website/ai',
+  path: '/website/ai',
+  getParentRoute: () => CmsV3Route,
 } as any)
 const AdminProductsNewRoute = AdminProductsNewRouteImport.update({
   id: '/products/new',
@@ -227,61 +366,157 @@ const AdminCustomersIdRoute = AdminCustomersIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AdminCustomersRoute,
 } as any)
+const AdminCmsNavigationRoute = AdminCmsNavigationRouteImport.update({
+  id: '/navigation',
+  path: '/navigation',
+  getParentRoute: () => AdminCmsRoute,
+} as any)
+const AdminCmsMenuPresentationRoute =
+  AdminCmsMenuPresentationRouteImport.update({
+    id: '/menu-presentation',
+    path: '/menu-presentation',
+    getParentRoute: () => AdminCmsRoute,
+  } as any)
+const AdminCmsMediaRoute = AdminCmsMediaRouteImport.update({
+  id: '/media',
+  path: '/media',
+  getParentRoute: () => AdminCmsRoute,
+} as any)
+const AdminCmsContactMessagesRoute = AdminCmsContactMessagesRouteImport.update({
+  id: '/contact-messages',
+  path: '/contact-messages',
+  getParentRoute: () => AdminCmsRoute,
+} as any)
+const AdminCmsBrandRoute = AdminCmsBrandRouteImport.update({
+  id: '/brand',
+  path: '/brand',
+  getParentRoute: () => AdminCmsRoute,
+} as any)
+const AdminCmsAppointmentsRoute = AdminCmsAppointmentsRouteImport.update({
+  id: '/appointments',
+  path: '/appointments',
+  getParentRoute: () => AdminCmsRoute,
+} as any)
+const AdminCmsAnnouncementsRoute = AdminCmsAnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
+  getParentRoute: () => AdminCmsRoute,
+} as any)
+const AdminCmsPagesIndexRoute = AdminCmsPagesIndexRouteImport.update({
+  id: '/pages/',
+  path: '/pages/',
+  getParentRoute: () => AdminCmsRoute,
+} as any)
 const ShopSlugThanksOrderNumberRoute =
   ShopSlugThanksOrderNumberRouteImport.update({
     id: '/thanks/$orderNumber',
     path: '/thanks/$orderNumber',
     getParentRoute: () => ShopSlugRoute,
   } as any)
+const ShopSlugPagesPageSlugRoute = ShopSlugPagesPageSlugRouteImport.update({
+  id: '/pages/$pageSlug',
+  path: '/pages/$pageSlug',
+  getParentRoute: () => ShopSlugRoute,
+} as any)
 const ShopSlugPProductSlugRoute = ShopSlugPProductSlugRouteImport.update({
   id: '/p/$productSlug',
   path: '/p/$productSlug',
   getParentRoute: () => ShopSlugRoute,
 } as any)
+const CmsV3WebsiteContentCollectionsRoute =
+  CmsV3WebsiteContentCollectionsRouteImport.update({
+    id: '/website/content/collections',
+    path: '/website/content/collections',
+    getParentRoute: () => CmsV3Route,
+  } as any)
+const EditorCmsV3EditorPageIdRoute = EditorCmsV3EditorPageIdRouteImport.update({
+  id: '/cms-v3/editor/$pageId',
+  path: '/cms-v3/editor/$pageId',
+  getParentRoute: () => EditorRoute,
+} as any)
+const AdminCmsPagesPageIdEditRoute = AdminCmsPagesPageIdEditRouteImport.update({
+  id: '/pages/$pageId/edit',
+  path: '/pages/$pageId/edit',
+  getParentRoute: () => AdminCmsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cms-v3': typeof CmsV3RouteWithChildren
+  '/kds': typeof KdsRoute
   '/login': typeof LoginRoute
   '/ai': typeof AdminAiRoute
+  '/ai-insights': typeof AdminAiInsightsRoute
   '/campaigns': typeof AdminCampaignsRoute
   '/categories': typeof AdminCategoriesRoute
+  '/cms': typeof AdminCmsRouteWithChildren
   '/crm': typeof AdminCrmRoute
   '/customers': typeof AdminCustomersRouteWithChildren
   '/dashboard': typeof AdminDashboardRoute
   '/demand': typeof AdminDemandRoute
   '/discounts': typeof AdminDiscountsRoute
   '/floor': typeof AdminFloorRoute
+  '/growth': typeof AdminGrowthRoute
   '/inventory': typeof AdminInventoryRoute
   '/kitchen': typeof AdminKitchenRoute
   '/loyalty': typeof AdminLoyaltyRoute
   '/menu': typeof AdminMenuRoute
   '/onboarding': typeof AdminOnboardingRoute
   '/orders': typeof AdminOrdersRouteWithChildren
+  '/qr-manager': typeof AdminQrManagerRoute
   '/reports': typeof AdminReportsRoute
   '/reservations': typeof AdminReservationsRoute
   '/reviews': typeof AdminReviewsRoute
   '/settings': typeof AdminSettingsRoute
   '/staff': typeof AdminStaffRoute
   '/shop/$slug': typeof ShopSlugRouteWithChildren
+  '/cms-v3/': typeof CmsV3IndexRoute
+  '/cms/announcements': typeof AdminCmsAnnouncementsRoute
+  '/cms/appointments': typeof AdminCmsAppointmentsRoute
+  '/cms/brand': typeof AdminCmsBrandRoute
+  '/cms/contact-messages': typeof AdminCmsContactMessagesRoute
+  '/cms/media': typeof AdminCmsMediaRoute
+  '/cms/menu-presentation': typeof AdminCmsMenuPresentationRoute
+  '/cms/navigation': typeof AdminCmsNavigationRoute
   '/customers/$id': typeof AdminCustomersIdRoute
   '/orders/$id': typeof AdminOrdersIdRoute
   '/products/$id': typeof AdminProductsIdRoute
   '/products/new': typeof AdminProductsNewRoute
+  '/cms-v3/website/ai': typeof CmsV3WebsiteAiRoute
+  '/cms-v3/website/announcements': typeof CmsV3WebsiteAnnouncementsRoute
+  '/cms-v3/website/appointments': typeof CmsV3WebsiteAppointmentsRoute
+  '/cms-v3/website/forms': typeof CmsV3WebsiteFormsRoute
+  '/cms-v3/website/media': typeof CmsV3WebsiteMediaRoute
+  '/cms-v3/website/navigation': typeof CmsV3WebsiteNavigationRoute
+  '/cms-v3/website/pages': typeof CmsV3WebsitePagesRoute
+  '/cms-v3/website/seo': typeof CmsV3WebsiteSeoRoute
+  '/cms-v3/website/settings': typeof CmsV3WebsiteSettingsRoute
+  '/cms-v3/website/templates': typeof CmsV3WebsiteTemplatesRoute
+  '/cms-v3/website/theme': typeof CmsV3WebsiteThemeRoute
+  '/cms-v3/website/versions': typeof CmsV3WebsiteVersionsRoute
   '/shop/$slug/cart': typeof ShopSlugCartRoute
   '/shop/$slug/checkout': typeof ShopSlugCheckoutRoute
   '/shop/$slug/deals': typeof ShopSlugDealsRoute
   '/shop/$slug/track': typeof ShopSlugTrackRoute
+  '/cms/': typeof AdminCmsIndexRoute
   '/customers/': typeof AdminCustomersIndexRoute
   '/orders/': typeof AdminOrdersIndexRoute
   '/products/': typeof AdminProductsIndexRoute
   '/shop/$slug/': typeof ShopSlugIndexRoute
+  '/cms-v3/editor/$pageId': typeof EditorCmsV3EditorPageIdRoute
+  '/cms-v3/website/content/collections': typeof CmsV3WebsiteContentCollectionsRoute
   '/shop/$slug/p/$productSlug': typeof ShopSlugPProductSlugRoute
+  '/shop/$slug/pages/$pageSlug': typeof ShopSlugPagesPageSlugRoute
   '/shop/$slug/thanks/$orderNumber': typeof ShopSlugThanksOrderNumberRoute
+  '/cms/pages/': typeof AdminCmsPagesIndexRoute
+  '/cms/pages/$pageId/edit': typeof AdminCmsPagesPageIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/kds': typeof KdsRoute
   '/login': typeof LoginRoute
   '/ai': typeof AdminAiRoute
+  '/ai-insights': typeof AdminAiInsightsRoute
   '/campaigns': typeof AdminCampaignsRoute
   '/categories': typeof AdminCategoriesRoute
   '/crm': typeof AdminCrmRoute
@@ -289,117 +524,212 @@ export interface FileRoutesByTo {
   '/demand': typeof AdminDemandRoute
   '/discounts': typeof AdminDiscountsRoute
   '/floor': typeof AdminFloorRoute
+  '/growth': typeof AdminGrowthRoute
   '/inventory': typeof AdminInventoryRoute
   '/kitchen': typeof AdminKitchenRoute
   '/loyalty': typeof AdminLoyaltyRoute
   '/menu': typeof AdminMenuRoute
   '/onboarding': typeof AdminOnboardingRoute
+  '/qr-manager': typeof AdminQrManagerRoute
   '/reports': typeof AdminReportsRoute
   '/reservations': typeof AdminReservationsRoute
   '/reviews': typeof AdminReviewsRoute
   '/settings': typeof AdminSettingsRoute
   '/staff': typeof AdminStaffRoute
+  '/cms-v3': typeof CmsV3IndexRoute
+  '/cms/announcements': typeof AdminCmsAnnouncementsRoute
+  '/cms/appointments': typeof AdminCmsAppointmentsRoute
+  '/cms/brand': typeof AdminCmsBrandRoute
+  '/cms/contact-messages': typeof AdminCmsContactMessagesRoute
+  '/cms/media': typeof AdminCmsMediaRoute
+  '/cms/menu-presentation': typeof AdminCmsMenuPresentationRoute
+  '/cms/navigation': typeof AdminCmsNavigationRoute
   '/customers/$id': typeof AdminCustomersIdRoute
   '/orders/$id': typeof AdminOrdersIdRoute
   '/products/$id': typeof AdminProductsIdRoute
   '/products/new': typeof AdminProductsNewRoute
+  '/cms-v3/website/ai': typeof CmsV3WebsiteAiRoute
+  '/cms-v3/website/announcements': typeof CmsV3WebsiteAnnouncementsRoute
+  '/cms-v3/website/appointments': typeof CmsV3WebsiteAppointmentsRoute
+  '/cms-v3/website/forms': typeof CmsV3WebsiteFormsRoute
+  '/cms-v3/website/media': typeof CmsV3WebsiteMediaRoute
+  '/cms-v3/website/navigation': typeof CmsV3WebsiteNavigationRoute
+  '/cms-v3/website/pages': typeof CmsV3WebsitePagesRoute
+  '/cms-v3/website/seo': typeof CmsV3WebsiteSeoRoute
+  '/cms-v3/website/settings': typeof CmsV3WebsiteSettingsRoute
+  '/cms-v3/website/templates': typeof CmsV3WebsiteTemplatesRoute
+  '/cms-v3/website/theme': typeof CmsV3WebsiteThemeRoute
+  '/cms-v3/website/versions': typeof CmsV3WebsiteVersionsRoute
   '/shop/$slug/cart': typeof ShopSlugCartRoute
   '/shop/$slug/checkout': typeof ShopSlugCheckoutRoute
   '/shop/$slug/deals': typeof ShopSlugDealsRoute
   '/shop/$slug/track': typeof ShopSlugTrackRoute
+  '/cms': typeof AdminCmsIndexRoute
   '/customers': typeof AdminCustomersIndexRoute
   '/orders': typeof AdminOrdersIndexRoute
   '/products': typeof AdminProductsIndexRoute
   '/shop/$slug': typeof ShopSlugIndexRoute
+  '/cms-v3/editor/$pageId': typeof EditorCmsV3EditorPageIdRoute
+  '/cms-v3/website/content/collections': typeof CmsV3WebsiteContentCollectionsRoute
   '/shop/$slug/p/$productSlug': typeof ShopSlugPProductSlugRoute
+  '/shop/$slug/pages/$pageSlug': typeof ShopSlugPagesPageSlugRoute
   '/shop/$slug/thanks/$orderNumber': typeof ShopSlugThanksOrderNumberRoute
+  '/cms/pages': typeof AdminCmsPagesIndexRoute
+  '/cms/pages/$pageId/edit': typeof AdminCmsPagesPageIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_admin': typeof AdminRouteWithChildren
+  '/_editor': typeof EditorRouteWithChildren
+  '/cms-v3': typeof CmsV3RouteWithChildren
+  '/kds': typeof KdsRoute
   '/login': typeof LoginRoute
   '/_admin/ai': typeof AdminAiRoute
+  '/_admin/ai-insights': typeof AdminAiInsightsRoute
   '/_admin/campaigns': typeof AdminCampaignsRoute
   '/_admin/categories': typeof AdminCategoriesRoute
+  '/_admin/cms': typeof AdminCmsRouteWithChildren
   '/_admin/crm': typeof AdminCrmRoute
   '/_admin/customers': typeof AdminCustomersRouteWithChildren
   '/_admin/dashboard': typeof AdminDashboardRoute
   '/_admin/demand': typeof AdminDemandRoute
   '/_admin/discounts': typeof AdminDiscountsRoute
   '/_admin/floor': typeof AdminFloorRoute
+  '/_admin/growth': typeof AdminGrowthRoute
   '/_admin/inventory': typeof AdminInventoryRoute
   '/_admin/kitchen': typeof AdminKitchenRoute
   '/_admin/loyalty': typeof AdminLoyaltyRoute
   '/_admin/menu': typeof AdminMenuRoute
   '/_admin/onboarding': typeof AdminOnboardingRoute
   '/_admin/orders': typeof AdminOrdersRouteWithChildren
+  '/_admin/qr-manager': typeof AdminQrManagerRoute
   '/_admin/reports': typeof AdminReportsRoute
   '/_admin/reservations': typeof AdminReservationsRoute
   '/_admin/reviews': typeof AdminReviewsRoute
   '/_admin/settings': typeof AdminSettingsRoute
   '/_admin/staff': typeof AdminStaffRoute
   '/shop/$slug': typeof ShopSlugRouteWithChildren
+  '/cms-v3/': typeof CmsV3IndexRoute
+  '/_admin/cms/announcements': typeof AdminCmsAnnouncementsRoute
+  '/_admin/cms/appointments': typeof AdminCmsAppointmentsRoute
+  '/_admin/cms/brand': typeof AdminCmsBrandRoute
+  '/_admin/cms/contact-messages': typeof AdminCmsContactMessagesRoute
+  '/_admin/cms/media': typeof AdminCmsMediaRoute
+  '/_admin/cms/menu-presentation': typeof AdminCmsMenuPresentationRoute
+  '/_admin/cms/navigation': typeof AdminCmsNavigationRoute
   '/_admin/customers/$id': typeof AdminCustomersIdRoute
   '/_admin/orders/$id': typeof AdminOrdersIdRoute
   '/_admin/products/$id': typeof AdminProductsIdRoute
   '/_admin/products/new': typeof AdminProductsNewRoute
+  '/cms-v3/website/ai': typeof CmsV3WebsiteAiRoute
+  '/cms-v3/website/announcements': typeof CmsV3WebsiteAnnouncementsRoute
+  '/cms-v3/website/appointments': typeof CmsV3WebsiteAppointmentsRoute
+  '/cms-v3/website/forms': typeof CmsV3WebsiteFormsRoute
+  '/cms-v3/website/media': typeof CmsV3WebsiteMediaRoute
+  '/cms-v3/website/navigation': typeof CmsV3WebsiteNavigationRoute
+  '/cms-v3/website/pages': typeof CmsV3WebsitePagesRoute
+  '/cms-v3/website/seo': typeof CmsV3WebsiteSeoRoute
+  '/cms-v3/website/settings': typeof CmsV3WebsiteSettingsRoute
+  '/cms-v3/website/templates': typeof CmsV3WebsiteTemplatesRoute
+  '/cms-v3/website/theme': typeof CmsV3WebsiteThemeRoute
+  '/cms-v3/website/versions': typeof CmsV3WebsiteVersionsRoute
   '/shop/$slug/cart': typeof ShopSlugCartRoute
   '/shop/$slug/checkout': typeof ShopSlugCheckoutRoute
   '/shop/$slug/deals': typeof ShopSlugDealsRoute
   '/shop/$slug/track': typeof ShopSlugTrackRoute
+  '/_admin/cms/': typeof AdminCmsIndexRoute
   '/_admin/customers/': typeof AdminCustomersIndexRoute
   '/_admin/orders/': typeof AdminOrdersIndexRoute
   '/_admin/products/': typeof AdminProductsIndexRoute
   '/shop/$slug/': typeof ShopSlugIndexRoute
+  '/_editor/cms-v3/editor/$pageId': typeof EditorCmsV3EditorPageIdRoute
+  '/cms-v3/website/content/collections': typeof CmsV3WebsiteContentCollectionsRoute
   '/shop/$slug/p/$productSlug': typeof ShopSlugPProductSlugRoute
+  '/shop/$slug/pages/$pageSlug': typeof ShopSlugPagesPageSlugRoute
   '/shop/$slug/thanks/$orderNumber': typeof ShopSlugThanksOrderNumberRoute
+  '/_admin/cms/pages/': typeof AdminCmsPagesIndexRoute
+  '/_admin/cms/pages/$pageId/edit': typeof AdminCmsPagesPageIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/cms-v3'
+    | '/kds'
     | '/login'
     | '/ai'
+    | '/ai-insights'
     | '/campaigns'
     | '/categories'
+    | '/cms'
     | '/crm'
     | '/customers'
     | '/dashboard'
     | '/demand'
     | '/discounts'
     | '/floor'
+    | '/growth'
     | '/inventory'
     | '/kitchen'
     | '/loyalty'
     | '/menu'
     | '/onboarding'
     | '/orders'
+    | '/qr-manager'
     | '/reports'
     | '/reservations'
     | '/reviews'
     | '/settings'
     | '/staff'
     | '/shop/$slug'
+    | '/cms-v3/'
+    | '/cms/announcements'
+    | '/cms/appointments'
+    | '/cms/brand'
+    | '/cms/contact-messages'
+    | '/cms/media'
+    | '/cms/menu-presentation'
+    | '/cms/navigation'
     | '/customers/$id'
     | '/orders/$id'
     | '/products/$id'
     | '/products/new'
+    | '/cms-v3/website/ai'
+    | '/cms-v3/website/announcements'
+    | '/cms-v3/website/appointments'
+    | '/cms-v3/website/forms'
+    | '/cms-v3/website/media'
+    | '/cms-v3/website/navigation'
+    | '/cms-v3/website/pages'
+    | '/cms-v3/website/seo'
+    | '/cms-v3/website/settings'
+    | '/cms-v3/website/templates'
+    | '/cms-v3/website/theme'
+    | '/cms-v3/website/versions'
     | '/shop/$slug/cart'
     | '/shop/$slug/checkout'
     | '/shop/$slug/deals'
     | '/shop/$slug/track'
+    | '/cms/'
     | '/customers/'
     | '/orders/'
     | '/products/'
     | '/shop/$slug/'
+    | '/cms-v3/editor/$pageId'
+    | '/cms-v3/website/content/collections'
     | '/shop/$slug/p/$productSlug'
+    | '/shop/$slug/pages/$pageSlug'
     | '/shop/$slug/thanks/$orderNumber'
+    | '/cms/pages/'
+    | '/cms/pages/$pageId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/kds'
     | '/login'
     | '/ai'
+    | '/ai-insights'
     | '/campaigns'
     | '/categories'
     | '/crm'
@@ -407,75 +737,139 @@ export interface FileRouteTypes {
     | '/demand'
     | '/discounts'
     | '/floor'
+    | '/growth'
     | '/inventory'
     | '/kitchen'
     | '/loyalty'
     | '/menu'
     | '/onboarding'
+    | '/qr-manager'
     | '/reports'
     | '/reservations'
     | '/reviews'
     | '/settings'
     | '/staff'
+    | '/cms-v3'
+    | '/cms/announcements'
+    | '/cms/appointments'
+    | '/cms/brand'
+    | '/cms/contact-messages'
+    | '/cms/media'
+    | '/cms/menu-presentation'
+    | '/cms/navigation'
     | '/customers/$id'
     | '/orders/$id'
     | '/products/$id'
     | '/products/new'
+    | '/cms-v3/website/ai'
+    | '/cms-v3/website/announcements'
+    | '/cms-v3/website/appointments'
+    | '/cms-v3/website/forms'
+    | '/cms-v3/website/media'
+    | '/cms-v3/website/navigation'
+    | '/cms-v3/website/pages'
+    | '/cms-v3/website/seo'
+    | '/cms-v3/website/settings'
+    | '/cms-v3/website/templates'
+    | '/cms-v3/website/theme'
+    | '/cms-v3/website/versions'
     | '/shop/$slug/cart'
     | '/shop/$slug/checkout'
     | '/shop/$slug/deals'
     | '/shop/$slug/track'
+    | '/cms'
     | '/customers'
     | '/orders'
     | '/products'
     | '/shop/$slug'
+    | '/cms-v3/editor/$pageId'
+    | '/cms-v3/website/content/collections'
     | '/shop/$slug/p/$productSlug'
+    | '/shop/$slug/pages/$pageSlug'
     | '/shop/$slug/thanks/$orderNumber'
+    | '/cms/pages'
+    | '/cms/pages/$pageId/edit'
   id:
     | '__root__'
     | '/'
     | '/_admin'
+    | '/_editor'
+    | '/cms-v3'
+    | '/kds'
     | '/login'
     | '/_admin/ai'
+    | '/_admin/ai-insights'
     | '/_admin/campaigns'
     | '/_admin/categories'
+    | '/_admin/cms'
     | '/_admin/crm'
     | '/_admin/customers'
     | '/_admin/dashboard'
     | '/_admin/demand'
     | '/_admin/discounts'
     | '/_admin/floor'
+    | '/_admin/growth'
     | '/_admin/inventory'
     | '/_admin/kitchen'
     | '/_admin/loyalty'
     | '/_admin/menu'
     | '/_admin/onboarding'
     | '/_admin/orders'
+    | '/_admin/qr-manager'
     | '/_admin/reports'
     | '/_admin/reservations'
     | '/_admin/reviews'
     | '/_admin/settings'
     | '/_admin/staff'
     | '/shop/$slug'
+    | '/cms-v3/'
+    | '/_admin/cms/announcements'
+    | '/_admin/cms/appointments'
+    | '/_admin/cms/brand'
+    | '/_admin/cms/contact-messages'
+    | '/_admin/cms/media'
+    | '/_admin/cms/menu-presentation'
+    | '/_admin/cms/navigation'
     | '/_admin/customers/$id'
     | '/_admin/orders/$id'
     | '/_admin/products/$id'
     | '/_admin/products/new'
+    | '/cms-v3/website/ai'
+    | '/cms-v3/website/announcements'
+    | '/cms-v3/website/appointments'
+    | '/cms-v3/website/forms'
+    | '/cms-v3/website/media'
+    | '/cms-v3/website/navigation'
+    | '/cms-v3/website/pages'
+    | '/cms-v3/website/seo'
+    | '/cms-v3/website/settings'
+    | '/cms-v3/website/templates'
+    | '/cms-v3/website/theme'
+    | '/cms-v3/website/versions'
     | '/shop/$slug/cart'
     | '/shop/$slug/checkout'
     | '/shop/$slug/deals'
     | '/shop/$slug/track'
+    | '/_admin/cms/'
     | '/_admin/customers/'
     | '/_admin/orders/'
     | '/_admin/products/'
     | '/shop/$slug/'
+    | '/_editor/cms-v3/editor/$pageId'
+    | '/cms-v3/website/content/collections'
     | '/shop/$slug/p/$productSlug'
+    | '/shop/$slug/pages/$pageSlug'
     | '/shop/$slug/thanks/$orderNumber'
+    | '/_admin/cms/pages/'
+    | '/_admin/cms/pages/$pageId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  EditorRoute: typeof EditorRouteWithChildren
+  CmsV3Route: typeof CmsV3RouteWithChildren
+  KdsRoute: typeof KdsRoute
   LoginRoute: typeof LoginRoute
   ShopSlugRoute: typeof ShopSlugRouteWithChildren
 }
@@ -487,6 +881,27 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kds': {
+      id: '/kds'
+      path: '/kds'
+      fullPath: '/kds'
+      preLoaderRoute: typeof KdsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cms-v3': {
+      id: '/cms-v3'
+      path: '/cms-v3'
+      fullPath: '/cms-v3'
+      preLoaderRoute: typeof CmsV3RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_editor': {
+      id: '/_editor'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof EditorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_admin': {
@@ -502,6 +917,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/cms-v3/': {
+      id: '/cms-v3/'
+      path: '/'
+      fullPath: '/cms-v3/'
+      preLoaderRoute: typeof CmsV3IndexRouteImport
+      parentRoute: typeof CmsV3Route
     }
     '/shop/$slug': {
       id: '/shop/$slug'
@@ -543,6 +965,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/qr-manager': {
+      id: '/_admin/qr-manager'
+      path: '/qr-manager'
+      fullPath: '/qr-manager'
+      preLoaderRoute: typeof AdminQrManagerRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/orders': {
@@ -587,6 +1016,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminInventoryRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/growth': {
+      id: '/_admin/growth'
+      path: '/growth'
+      fullPath: '/growth'
+      preLoaderRoute: typeof AdminGrowthRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/floor': {
       id: '/_admin/floor'
       path: '/floor'
@@ -629,6 +1065,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCrmRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/cms': {
+      id: '/_admin/cms'
+      path: '/cms'
+      fullPath: '/cms'
+      preLoaderRoute: typeof AdminCmsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/categories': {
       id: '/_admin/categories'
       path: '/categories'
@@ -641,6 +1084,13 @@ declare module '@tanstack/react-router' {
       path: '/campaigns'
       fullPath: '/campaigns'
       preLoaderRoute: typeof AdminCampaignsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/ai-insights': {
+      id: '/_admin/ai-insights'
+      path: '/ai-insights'
+      fullPath: '/ai-insights'
+      preLoaderRoute: typeof AdminAiInsightsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/ai': {
@@ -678,6 +1128,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCustomersIndexRouteImport
       parentRoute: typeof AdminCustomersRoute
     }
+    '/_admin/cms/': {
+      id: '/_admin/cms/'
+      path: '/'
+      fullPath: '/cms/'
+      preLoaderRoute: typeof AdminCmsIndexRouteImport
+      parentRoute: typeof AdminCmsRoute
+    }
     '/shop/$slug/track': {
       id: '/shop/$slug/track'
       path: '/track'
@@ -705,6 +1162,90 @@ declare module '@tanstack/react-router' {
       fullPath: '/shop/$slug/cart'
       preLoaderRoute: typeof ShopSlugCartRouteImport
       parentRoute: typeof ShopSlugRoute
+    }
+    '/cms-v3/website/versions': {
+      id: '/cms-v3/website/versions'
+      path: '/website/versions'
+      fullPath: '/cms-v3/website/versions'
+      preLoaderRoute: typeof CmsV3WebsiteVersionsRouteImport
+      parentRoute: typeof CmsV3Route
+    }
+    '/cms-v3/website/theme': {
+      id: '/cms-v3/website/theme'
+      path: '/website/theme'
+      fullPath: '/cms-v3/website/theme'
+      preLoaderRoute: typeof CmsV3WebsiteThemeRouteImport
+      parentRoute: typeof CmsV3Route
+    }
+    '/cms-v3/website/templates': {
+      id: '/cms-v3/website/templates'
+      path: '/website/templates'
+      fullPath: '/cms-v3/website/templates'
+      preLoaderRoute: typeof CmsV3WebsiteTemplatesRouteImport
+      parentRoute: typeof CmsV3Route
+    }
+    '/cms-v3/website/settings': {
+      id: '/cms-v3/website/settings'
+      path: '/website/settings'
+      fullPath: '/cms-v3/website/settings'
+      preLoaderRoute: typeof CmsV3WebsiteSettingsRouteImport
+      parentRoute: typeof CmsV3Route
+    }
+    '/cms-v3/website/seo': {
+      id: '/cms-v3/website/seo'
+      path: '/website/seo'
+      fullPath: '/cms-v3/website/seo'
+      preLoaderRoute: typeof CmsV3WebsiteSeoRouteImport
+      parentRoute: typeof CmsV3Route
+    }
+    '/cms-v3/website/pages': {
+      id: '/cms-v3/website/pages'
+      path: '/website/pages'
+      fullPath: '/cms-v3/website/pages'
+      preLoaderRoute: typeof CmsV3WebsitePagesRouteImport
+      parentRoute: typeof CmsV3Route
+    }
+    '/cms-v3/website/navigation': {
+      id: '/cms-v3/website/navigation'
+      path: '/website/navigation'
+      fullPath: '/cms-v3/website/navigation'
+      preLoaderRoute: typeof CmsV3WebsiteNavigationRouteImport
+      parentRoute: typeof CmsV3Route
+    }
+    '/cms-v3/website/media': {
+      id: '/cms-v3/website/media'
+      path: '/website/media'
+      fullPath: '/cms-v3/website/media'
+      preLoaderRoute: typeof CmsV3WebsiteMediaRouteImport
+      parentRoute: typeof CmsV3Route
+    }
+    '/cms-v3/website/forms': {
+      id: '/cms-v3/website/forms'
+      path: '/website/forms'
+      fullPath: '/cms-v3/website/forms'
+      preLoaderRoute: typeof CmsV3WebsiteFormsRouteImport
+      parentRoute: typeof CmsV3Route
+    }
+    '/cms-v3/website/appointments': {
+      id: '/cms-v3/website/appointments'
+      path: '/website/appointments'
+      fullPath: '/cms-v3/website/appointments'
+      preLoaderRoute: typeof CmsV3WebsiteAppointmentsRouteImport
+      parentRoute: typeof CmsV3Route
+    }
+    '/cms-v3/website/announcements': {
+      id: '/cms-v3/website/announcements'
+      path: '/website/announcements'
+      fullPath: '/cms-v3/website/announcements'
+      preLoaderRoute: typeof CmsV3WebsiteAnnouncementsRouteImport
+      parentRoute: typeof CmsV3Route
+    }
+    '/cms-v3/website/ai': {
+      id: '/cms-v3/website/ai'
+      path: '/website/ai'
+      fullPath: '/cms-v3/website/ai'
+      preLoaderRoute: typeof CmsV3WebsiteAiRouteImport
+      parentRoute: typeof CmsV3Route
     }
     '/_admin/products/new': {
       id: '/_admin/products/new'
@@ -734,11 +1275,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCustomersIdRouteImport
       parentRoute: typeof AdminCustomersRoute
     }
+    '/_admin/cms/navigation': {
+      id: '/_admin/cms/navigation'
+      path: '/navigation'
+      fullPath: '/cms/navigation'
+      preLoaderRoute: typeof AdminCmsNavigationRouteImport
+      parentRoute: typeof AdminCmsRoute
+    }
+    '/_admin/cms/menu-presentation': {
+      id: '/_admin/cms/menu-presentation'
+      path: '/menu-presentation'
+      fullPath: '/cms/menu-presentation'
+      preLoaderRoute: typeof AdminCmsMenuPresentationRouteImport
+      parentRoute: typeof AdminCmsRoute
+    }
+    '/_admin/cms/media': {
+      id: '/_admin/cms/media'
+      path: '/media'
+      fullPath: '/cms/media'
+      preLoaderRoute: typeof AdminCmsMediaRouteImport
+      parentRoute: typeof AdminCmsRoute
+    }
+    '/_admin/cms/contact-messages': {
+      id: '/_admin/cms/contact-messages'
+      path: '/contact-messages'
+      fullPath: '/cms/contact-messages'
+      preLoaderRoute: typeof AdminCmsContactMessagesRouteImport
+      parentRoute: typeof AdminCmsRoute
+    }
+    '/_admin/cms/brand': {
+      id: '/_admin/cms/brand'
+      path: '/brand'
+      fullPath: '/cms/brand'
+      preLoaderRoute: typeof AdminCmsBrandRouteImport
+      parentRoute: typeof AdminCmsRoute
+    }
+    '/_admin/cms/appointments': {
+      id: '/_admin/cms/appointments'
+      path: '/appointments'
+      fullPath: '/cms/appointments'
+      preLoaderRoute: typeof AdminCmsAppointmentsRouteImport
+      parentRoute: typeof AdminCmsRoute
+    }
+    '/_admin/cms/announcements': {
+      id: '/_admin/cms/announcements'
+      path: '/announcements'
+      fullPath: '/cms/announcements'
+      preLoaderRoute: typeof AdminCmsAnnouncementsRouteImport
+      parentRoute: typeof AdminCmsRoute
+    }
+    '/_admin/cms/pages/': {
+      id: '/_admin/cms/pages/'
+      path: '/pages'
+      fullPath: '/cms/pages/'
+      preLoaderRoute: typeof AdminCmsPagesIndexRouteImport
+      parentRoute: typeof AdminCmsRoute
+    }
     '/shop/$slug/thanks/$orderNumber': {
       id: '/shop/$slug/thanks/$orderNumber'
       path: '/thanks/$orderNumber'
       fullPath: '/shop/$slug/thanks/$orderNumber'
       preLoaderRoute: typeof ShopSlugThanksOrderNumberRouteImport
+      parentRoute: typeof ShopSlugRoute
+    }
+    '/shop/$slug/pages/$pageSlug': {
+      id: '/shop/$slug/pages/$pageSlug'
+      path: '/pages/$pageSlug'
+      fullPath: '/shop/$slug/pages/$pageSlug'
+      preLoaderRoute: typeof ShopSlugPagesPageSlugRouteImport
       parentRoute: typeof ShopSlugRoute
     }
     '/shop/$slug/p/$productSlug': {
@@ -748,8 +1352,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopSlugPProductSlugRouteImport
       parentRoute: typeof ShopSlugRoute
     }
+    '/cms-v3/website/content/collections': {
+      id: '/cms-v3/website/content/collections'
+      path: '/website/content/collections'
+      fullPath: '/cms-v3/website/content/collections'
+      preLoaderRoute: typeof CmsV3WebsiteContentCollectionsRouteImport
+      parentRoute: typeof CmsV3Route
+    }
+    '/_editor/cms-v3/editor/$pageId': {
+      id: '/_editor/cms-v3/editor/$pageId'
+      path: '/cms-v3/editor/$pageId'
+      fullPath: '/cms-v3/editor/$pageId'
+      preLoaderRoute: typeof EditorCmsV3EditorPageIdRouteImport
+      parentRoute: typeof EditorRoute
+    }
+    '/_admin/cms/pages/$pageId/edit': {
+      id: '/_admin/cms/pages/$pageId/edit'
+      path: '/pages/$pageId/edit'
+      fullPath: '/cms/pages/$pageId/edit'
+      preLoaderRoute: typeof AdminCmsPagesPageIdEditRouteImport
+      parentRoute: typeof AdminCmsRoute
+    }
   }
 }
+
+interface AdminCmsRouteChildren {
+  AdminCmsAnnouncementsRoute: typeof AdminCmsAnnouncementsRoute
+  AdminCmsAppointmentsRoute: typeof AdminCmsAppointmentsRoute
+  AdminCmsBrandRoute: typeof AdminCmsBrandRoute
+  AdminCmsContactMessagesRoute: typeof AdminCmsContactMessagesRoute
+  AdminCmsMediaRoute: typeof AdminCmsMediaRoute
+  AdminCmsMenuPresentationRoute: typeof AdminCmsMenuPresentationRoute
+  AdminCmsNavigationRoute: typeof AdminCmsNavigationRoute
+  AdminCmsIndexRoute: typeof AdminCmsIndexRoute
+  AdminCmsPagesIndexRoute: typeof AdminCmsPagesIndexRoute
+  AdminCmsPagesPageIdEditRoute: typeof AdminCmsPagesPageIdEditRoute
+}
+
+const AdminCmsRouteChildren: AdminCmsRouteChildren = {
+  AdminCmsAnnouncementsRoute: AdminCmsAnnouncementsRoute,
+  AdminCmsAppointmentsRoute: AdminCmsAppointmentsRoute,
+  AdminCmsBrandRoute: AdminCmsBrandRoute,
+  AdminCmsContactMessagesRoute: AdminCmsContactMessagesRoute,
+  AdminCmsMediaRoute: AdminCmsMediaRoute,
+  AdminCmsMenuPresentationRoute: AdminCmsMenuPresentationRoute,
+  AdminCmsNavigationRoute: AdminCmsNavigationRoute,
+  AdminCmsIndexRoute: AdminCmsIndexRoute,
+  AdminCmsPagesIndexRoute: AdminCmsPagesIndexRoute,
+  AdminCmsPagesPageIdEditRoute: AdminCmsPagesPageIdEditRoute,
+}
+
+const AdminCmsRouteWithChildren = AdminCmsRoute._addFileChildren(
+  AdminCmsRouteChildren,
+)
 
 interface AdminCustomersRouteChildren {
   AdminCustomersIdRoute: typeof AdminCustomersIdRoute
@@ -781,20 +1436,24 @@ const AdminOrdersRouteWithChildren = AdminOrdersRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminAiRoute: typeof AdminAiRoute
+  AdminAiInsightsRoute: typeof AdminAiInsightsRoute
   AdminCampaignsRoute: typeof AdminCampaignsRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
+  AdminCmsRoute: typeof AdminCmsRouteWithChildren
   AdminCrmRoute: typeof AdminCrmRoute
   AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminDemandRoute: typeof AdminDemandRoute
   AdminDiscountsRoute: typeof AdminDiscountsRoute
   AdminFloorRoute: typeof AdminFloorRoute
+  AdminGrowthRoute: typeof AdminGrowthRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminKitchenRoute: typeof AdminKitchenRoute
   AdminLoyaltyRoute: typeof AdminLoyaltyRoute
   AdminMenuRoute: typeof AdminMenuRoute
   AdminOnboardingRoute: typeof AdminOnboardingRoute
   AdminOrdersRoute: typeof AdminOrdersRouteWithChildren
+  AdminQrManagerRoute: typeof AdminQrManagerRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminReservationsRoute: typeof AdminReservationsRoute
   AdminReviewsRoute: typeof AdminReviewsRoute
@@ -807,20 +1466,24 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAiRoute: AdminAiRoute,
+  AdminAiInsightsRoute: AdminAiInsightsRoute,
   AdminCampaignsRoute: AdminCampaignsRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
+  AdminCmsRoute: AdminCmsRouteWithChildren,
   AdminCrmRoute: AdminCrmRoute,
   AdminCustomersRoute: AdminCustomersRouteWithChildren,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminDemandRoute: AdminDemandRoute,
   AdminDiscountsRoute: AdminDiscountsRoute,
   AdminFloorRoute: AdminFloorRoute,
+  AdminGrowthRoute: AdminGrowthRoute,
   AdminInventoryRoute: AdminInventoryRoute,
   AdminKitchenRoute: AdminKitchenRoute,
   AdminLoyaltyRoute: AdminLoyaltyRoute,
   AdminMenuRoute: AdminMenuRoute,
   AdminOnboardingRoute: AdminOnboardingRoute,
   AdminOrdersRoute: AdminOrdersRouteWithChildren,
+  AdminQrManagerRoute: AdminQrManagerRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminReservationsRoute: AdminReservationsRoute,
   AdminReviewsRoute: AdminReviewsRoute,
@@ -833,6 +1496,53 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface EditorRouteChildren {
+  EditorCmsV3EditorPageIdRoute: typeof EditorCmsV3EditorPageIdRoute
+}
+
+const EditorRouteChildren: EditorRouteChildren = {
+  EditorCmsV3EditorPageIdRoute: EditorCmsV3EditorPageIdRoute,
+}
+
+const EditorRouteWithChildren =
+  EditorRoute._addFileChildren(EditorRouteChildren)
+
+interface CmsV3RouteChildren {
+  CmsV3IndexRoute: typeof CmsV3IndexRoute
+  CmsV3WebsiteAiRoute: typeof CmsV3WebsiteAiRoute
+  CmsV3WebsiteAnnouncementsRoute: typeof CmsV3WebsiteAnnouncementsRoute
+  CmsV3WebsiteAppointmentsRoute: typeof CmsV3WebsiteAppointmentsRoute
+  CmsV3WebsiteFormsRoute: typeof CmsV3WebsiteFormsRoute
+  CmsV3WebsiteMediaRoute: typeof CmsV3WebsiteMediaRoute
+  CmsV3WebsiteNavigationRoute: typeof CmsV3WebsiteNavigationRoute
+  CmsV3WebsitePagesRoute: typeof CmsV3WebsitePagesRoute
+  CmsV3WebsiteSeoRoute: typeof CmsV3WebsiteSeoRoute
+  CmsV3WebsiteSettingsRoute: typeof CmsV3WebsiteSettingsRoute
+  CmsV3WebsiteTemplatesRoute: typeof CmsV3WebsiteTemplatesRoute
+  CmsV3WebsiteThemeRoute: typeof CmsV3WebsiteThemeRoute
+  CmsV3WebsiteVersionsRoute: typeof CmsV3WebsiteVersionsRoute
+  CmsV3WebsiteContentCollectionsRoute: typeof CmsV3WebsiteContentCollectionsRoute
+}
+
+const CmsV3RouteChildren: CmsV3RouteChildren = {
+  CmsV3IndexRoute: CmsV3IndexRoute,
+  CmsV3WebsiteAiRoute: CmsV3WebsiteAiRoute,
+  CmsV3WebsiteAnnouncementsRoute: CmsV3WebsiteAnnouncementsRoute,
+  CmsV3WebsiteAppointmentsRoute: CmsV3WebsiteAppointmentsRoute,
+  CmsV3WebsiteFormsRoute: CmsV3WebsiteFormsRoute,
+  CmsV3WebsiteMediaRoute: CmsV3WebsiteMediaRoute,
+  CmsV3WebsiteNavigationRoute: CmsV3WebsiteNavigationRoute,
+  CmsV3WebsitePagesRoute: CmsV3WebsitePagesRoute,
+  CmsV3WebsiteSeoRoute: CmsV3WebsiteSeoRoute,
+  CmsV3WebsiteSettingsRoute: CmsV3WebsiteSettingsRoute,
+  CmsV3WebsiteTemplatesRoute: CmsV3WebsiteTemplatesRoute,
+  CmsV3WebsiteThemeRoute: CmsV3WebsiteThemeRoute,
+  CmsV3WebsiteVersionsRoute: CmsV3WebsiteVersionsRoute,
+  CmsV3WebsiteContentCollectionsRoute: CmsV3WebsiteContentCollectionsRoute,
+}
+
+const CmsV3RouteWithChildren = CmsV3Route._addFileChildren(CmsV3RouteChildren)
+
 interface ShopSlugRouteChildren {
   ShopSlugCartRoute: typeof ShopSlugCartRoute
   ShopSlugCheckoutRoute: typeof ShopSlugCheckoutRoute
@@ -840,6 +1550,7 @@ interface ShopSlugRouteChildren {
   ShopSlugTrackRoute: typeof ShopSlugTrackRoute
   ShopSlugIndexRoute: typeof ShopSlugIndexRoute
   ShopSlugPProductSlugRoute: typeof ShopSlugPProductSlugRoute
+  ShopSlugPagesPageSlugRoute: typeof ShopSlugPagesPageSlugRoute
   ShopSlugThanksOrderNumberRoute: typeof ShopSlugThanksOrderNumberRoute
 }
 
@@ -850,6 +1561,7 @@ const ShopSlugRouteChildren: ShopSlugRouteChildren = {
   ShopSlugTrackRoute: ShopSlugTrackRoute,
   ShopSlugIndexRoute: ShopSlugIndexRoute,
   ShopSlugPProductSlugRoute: ShopSlugPProductSlugRoute,
+  ShopSlugPagesPageSlugRoute: ShopSlugPagesPageSlugRoute,
   ShopSlugThanksOrderNumberRoute: ShopSlugThanksOrderNumberRoute,
 }
 
@@ -860,6 +1572,9 @@ const ShopSlugRouteWithChildren = ShopSlugRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  EditorRoute: EditorRouteWithChildren,
+  CmsV3Route: CmsV3RouteWithChildren,
+  KdsRoute: KdsRoute,
   LoginRoute: LoginRoute,
   ShopSlugRoute: ShopSlugRouteWithChildren,
 }

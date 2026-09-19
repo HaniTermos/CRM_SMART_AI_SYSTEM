@@ -8,11 +8,11 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import "@/styles/theme.css";
-import { ThemeProvider } from "@/components/theme-provider";
 
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
+import { TerminalHealthChecker } from "@/components/common/TerminalHealthChecker";
 
 function NotFoundComponent() {
   return (
@@ -115,13 +115,12 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
-    <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <Outlet />
-          <Toaster />
-        </AuthProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TerminalHealthChecker />
+        <Outlet />
+        <Toaster />
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

@@ -1,12 +1,12 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { HTMLAttributes, forwardRef } from "react";
+import { forwardRef, ReactNode } from "react";
 
 export const IOSCard = forwardRef<
   HTMLDivElement,
-  HTMLAttributes<HTMLDivElement> & { isPressable?: boolean; glow?: boolean }
+  Omit<HTMLMotionProps<"div">, "children"> & { isPressable?: boolean; glow?: boolean; children?: ReactNode }
 >(({ className, isPressable = true, glow = false, children, ...props }, ref) => (
   <motion.div
     ref={ref}

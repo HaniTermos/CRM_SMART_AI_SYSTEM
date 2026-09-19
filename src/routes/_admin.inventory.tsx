@@ -153,7 +153,7 @@ function InventoryRoute() {
                 </div>
                 <span className="text-xs text-adaptive-muted">{item.minStock} / {item.maxStock}</span>
                 <span className="text-sm text-adaptive">${item.unitCost.toFixed(2)}</span>
-                <IOSBadge variant={status === "critical" ? "danger" : status === "low" ? "warning" : status === "expiring" ? "violet" : "success"} size="sm">
+                <IOSBadge variant={status === "critical" ? "destructive" : status === "low" ? "warning" : status === "expiring" ? "violet" : "success"} size="sm">
                   {status === "ok" ? "Healthy" : status}
                 </IOSBadge>
                 <span className="text-xs text-adaptive-muted flex items-center gap-1"><MapPin className="h-3 w-3" />{item.location}</span>

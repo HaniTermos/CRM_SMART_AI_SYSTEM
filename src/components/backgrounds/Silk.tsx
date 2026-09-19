@@ -4,7 +4,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { forwardRef, useRef, useMemo, useLayoutEffect, useEffect } from "react";
 import { Color } from "three";
 
-const hexToNormalizedRGB = (hex: string) => {
+const hexToNormalizedRGB = (hex: string): [number, number, number] => {
     hex = hex.replace("#", "");
     return [
         parseInt(hex.slice(0, 2), 16) / 255,

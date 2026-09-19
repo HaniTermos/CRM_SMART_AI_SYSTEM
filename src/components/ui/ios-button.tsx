@@ -1,15 +1,16 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { ButtonHTMLAttributes, forwardRef } from "react";
+import { forwardRef, ReactNode } from "react";
 
 export const IOSButton = forwardRef<
   HTMLButtonElement,
-  ButtonHTMLAttributes<HTMLButtonElement> & {
+  Omit<HTMLMotionProps<"button">, "children"> & {
     variant?: "default" | "ghost" | "outline" | "glass" | "subtle" | "destructive" | "gradient";
     size?: "sm" | "md" | "lg" | "icon" | "pill";
     isLoading?: boolean;
+    children?: ReactNode;
   }
 >(({ className, variant = "default", size = "md", isLoading, children, ...props }, ref) => {
   const variants = {

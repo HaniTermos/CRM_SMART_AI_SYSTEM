@@ -35,37 +35,40 @@ const authenticate = async (req, res, next) => {
   }
 };
 
-const authorize = (...roles) => {
-  return async (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated.' });
-    }
-
-    const storeId = req.params.storeId || req.body.store_id || req.query.store_id;
-
-    if (storeId) {
-      const result = await db.query(
-        'SELECT role FROM user_roles WHERE user_id = $1 AND store_id = $2',
-        [req.user.id, storeId]
-      );
-      const userRole = result.rows[0]?.role;
-      if (!userRole || !roles.includes(userRole)) {
-        return res.status(403).json({ error: 'Insufficient permissions.' });
-      }
-    }
-
-    next();
-  };
-};
-
 const requireStoreAccess = async (req, res, next) => {
   try {
-    const storeId = req.params.storeId || req.body.store_id || req.query.store_id;
+    let storeId = req.storeId || req.params.storeId || req.body?.store_id || req.query?.store_id;
 
-    if (!storeId) {
-      return res.status(400).json({ error: 'Store ID required.' });
+    if (!storeId || storeId === 'me') {
+      const userStores = await db.query(
+        `SELECT s.*, r.role FROM stores s
+         JOIN user_roles r ON s.id = r.store_id
+         WHERE r.user_id = $1
+         ORDER BY s.created_at DESC LIMIT 1`,
+        [req.user.id]
+      );
+      if (userStores.rows.length > 0) {
+        req.store = userStores.rows[0];
+        req.storeId = userStores.rows[0].id;
+        req.userRole = userStores.rows[0].role || 'owner';
+        return next();
+      }
+
+      const ownedStore = await db.query(
+        `SELECT * FROM stores WHERE owner_user_id = $1 ORDER BY created_at DESC LIMIT 1`,
+        [req.user.id]
+      );
+      if (ownedStore.rows.length > 0) {
+        req.store = ownedStore.rows[0];
+        req.storeId = ownedStore.rows[0].id;
+        req.userRole = 'owner';
+        return next();
+      }
+
+      return res.status(404).json({ error: 'No active store found for this account.' });
     }
 
+    req.storeId = storeId;
     const roleResult = await db.query(
       'SELECT role FROM user_roles WHERE user_id = $1 AND store_id = $2',
       [req.user.id, storeId]
@@ -105,12 +108,38 @@ const requireStoreAccess = async (req, res, next) => {
 
 const requireStoreAdmin = async (req, res, next) => {
   try {
-    const storeId = req.params.storeId || req.body.store_id || req.query.store_id;
+    let storeId = req.storeId || req.params.storeId || req.body?.store_id || req.query?.store_id;
 
-    if (!storeId) {
-      return res.status(400).json({ error: 'Store ID required.' });
+    if (!storeId || storeId === 'me') {
+      const userStores = await db.query(
+        `SELECT s.*, r.role FROM stores s
+         JOIN user_roles r ON s.id = r.store_id
+         WHERE r.user_id = $1 AND r.role IN ('owner', 'admin')
+         ORDER BY s.created_at DESC LIMIT 1`,
+        [req.user.id]
+      );
+      if (userStores.rows.length > 0) {
+        req.store = userStores.rows[0];
+        req.storeId = userStores.rows[0].id;
+        req.userRole = userStores.rows[0].role || 'owner';
+        return next();
+      }
+
+      const ownedStore = await db.query(
+        `SELECT * FROM stores WHERE owner_user_id = $1 ORDER BY created_at DESC LIMIT 1`,
+        [req.user.id]
+      );
+      if (ownedStore.rows.length > 0) {
+        req.store = ownedStore.rows[0];
+        req.storeId = ownedStore.rows[0].id;
+        req.userRole = 'owner';
+        return next();
+      }
+
+      return res.status(403).json({ error: 'Admin access required.' });
     }
 
+    req.storeId = storeId;
     const roleResult = await db.query(
       `SELECT role FROM user_roles 
        WHERE user_id = $1 AND store_id = $2 AND role IN ('owner', 'admin')`,
@@ -147,4 +176,4 @@ const requireStoreAdmin = async (req, res, next) => {
   }
 };
 
-module.exports = { authenticate, authorize, requireStoreAccess, requireStoreAdmin };
+module.exports = { authenticate, authenticateToken: authenticate, requireStoreAccess, requireStoreAdmin };

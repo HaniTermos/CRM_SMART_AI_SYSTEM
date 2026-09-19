@@ -48,7 +48,7 @@ function CircularProgress({
 
 export function KpiCard({
   label, value, previousValue, prefix = "", suffix = "", delay = 0,
-  icon, progress, progressColor = "#190E85", sparklineData,
+  icon, progress, progressColor = "#190E85", sparklineData, onClick,
 }: any) {
   const numeric = typeof value === "string" ? parseFloat(value.replace(/[^0-9.]/g, "")) : value;
   const display = useCountUp(numeric);
@@ -62,8 +62,12 @@ export function KpiCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: delay * 0.08, duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
       className="h-full"
+      onClick={onClick}
     >
-      <div className="glass-card h-full flex flex-col p-4 sm:p-5">
+      <div className={cn(
+        "glass-card h-full flex flex-col p-4 sm:p-5 transition-all duration-200",
+        onClick && "cursor-pointer hover:border-primary/40 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+      )}>
         <div className="flex items-start justify-between flex-1">
           <div className="space-y-2 flex-1 min-w-0">
             <div className="flex items-center gap-2">

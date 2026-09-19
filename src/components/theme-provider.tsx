@@ -1,53 +1,92 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { useUserPreferences, type DashboardTheme } from "@/lib/use-user-preferences";
+import { useUpdateUserPreferences } from "@/lib/use-user-preferences";
+import { useAuth } from "@/lib/auth-context";
 
 interface ThemeContextType {
+  theme: DashboardTheme;
   isDark: boolean;
   toggleDark: () => void;
+  setTheme: (theme: DashboardTheme) => void;
   setDark: (v: boolean) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
+  theme: "system",
   isDark: false,
-  toggleDark: () => { },
-  setDark: () => { },
+  toggleDark: () => {},
+  setTheme: () => {},
+  setDark: () => {},
 });
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [isDark, setIsDark] = useState(false);
+function resolveIsDark(theme: DashboardTheme, prefersDark: boolean): boolean {
+  if (theme === "dark") return true;
+  if (theme === "light") return false;
+  return prefersDark;
+}
+
+export function DashboardThemeProvider({ children }: { children: ReactNode }) {
+  const { user, loading: authLoading } = useAuth();
+  const { data: prefs, isLoading: prefsLoading } = useUserPreferences();
+  const updatePrefs = useUpdateUserPreferences();
+
   const [mounted, setMounted] = useState(false);
+  const [localTheme, setLocalTheme] = useState<DashboardTheme>("system");
 
   useEffect(() => {
     setMounted(true);
-    const saved = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const shouldDark = saved === "dark" || (!saved && prefersDark);
-    setIsDark(shouldDark);
-    if (shouldDark) document.documentElement.classList.add("dark");
   }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
+  const isLoading = authLoading || prefsLoading;
+  const theme: DashboardTheme = prefs?.dashboard_theme || localTheme;
+
+  const prefersDark =
+    typeof window !== "undefined" && window.matchMedia
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+      : false;
+
+  const isDark = resolveIsDark(theme, prefersDark);
+
+  const persistTheme = (next: DashboardTheme) => {
+    setLocalTheme(next);
+    if (user) {
+      updatePrefs.mutate({ dashboard_theme: next });
     }
-  }, [isDark, mounted]);
+  };
 
-  const toggleDark = () => setIsDark((p) => !p);
-  const setDark = (v: boolean) => setIsDark(v);  // ← THIS WAS MISSING
+  const setTheme = (next: DashboardTheme) => {
+    persistTheme(next);
+  };
 
-  if (!mounted) {
-    return <div style={{ visibility: "hidden" }}>{children}</div>;
+  const toggleDark = () => {
+    const next = isDark ? "light" : "dark";
+    persistTheme(next);
+  };
+
+  const setDark = (v: boolean) => {
+    const next = v ? "dark" : "light";
+    persistTheme(next);
+  };
+
+  if (!mounted || isLoading) {
+    return (
+      <div className="min-h-screen bg-[#F9FAFB] text-[#0F172A]">
+        {children}
+      </div>
+    );
   }
 
   return (
-    <ThemeContext.Provider value={{ isDark, toggleDark, setDark }}>
-      {children}
+    <ThemeContext.Provider value={{ theme, isDark, toggleDark, setTheme, setDark }}>
+      <div
+        data-app-scope="dashboard"
+        data-dashboard-theme={isDark ? "dark" : "light"}
+        className={isDark ? "dark" : ""}
+      >
+        {children}
+      </div>
     </ThemeContext.Provider>
   );
 }
