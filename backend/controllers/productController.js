@@ -6,9 +6,15 @@ const createValidation = [
   body('name').notEmpty().trim().withMessage('Product name is required'),
   body('slug').notEmpty().trim().matches(/^[a-zA-Z0-9_-]+$/).withMessage('Valid slug is required'),
   body('price').isNumeric().withMessage('Price must be a number'),
-  body('stock').isInt({ min: 0 }).withMessage('Stock must be a positive integer'),
+  body('stock').optional().isInt({ min: 0 }).withMessage('Stock must be a positive integer'),
   body('category_id').optional({ nullable: true }).isUUID(),
-  body('status').optional().isIn(['draft', 'active', 'archived'])
+  body('status').optional().isIn(['draft', 'active', 'archived']),
+  body('prep_time').optional().isInt({ min: 0 }),
+  body('is_available').optional().isBoolean(),
+  body('is_featured').optional().isBoolean(),
+  body('dietary_tags').optional().isArray(),
+  body('allergens').optional().isArray(),
+  body('modifiers').optional().isArray()
 ];
 
 const updateValidation = [
@@ -17,7 +23,13 @@ const updateValidation = [
   body('price').optional().isNumeric(),
   body('stock').optional().isInt({ min: 0 }),
   body('category_id').optional({ nullable: true }).isUUID(),
-  body('status').optional().isIn(['draft', 'active', 'archived'])
+  body('status').optional().isIn(['draft', 'active', 'archived']),
+  body('prep_time').optional().isInt({ min: 0 }),
+  body('is_available').optional().isBoolean(),
+  body('is_featured').optional().isBoolean(),
+  body('dietary_tags').optional().isArray(),
+  body('allergens').optional().isArray(),
+  body('modifiers').optional().isArray()
 ];
 
 exports.create = [
@@ -80,7 +92,7 @@ exports.update = [
   validate,
   async (req, res, next) => {
     try {
-      const updatedProduct = await Product.update(req.params.id, req.body);
+      const updatedProduct = await Product.update(req.params.id, req.params.storeId, req.body);
       if (!updatedProduct) {
         return res.status(404).json({ error: 'Product not found' });
       }
@@ -93,7 +105,7 @@ exports.update = [
 
 exports.delete = async (req, res, next) => {
   try {
-    const deleted = await Product.delete(req.params.id);
+    const deleted = await Product.delete(req.params.id, req.params.storeId);
     if (!deleted) {
       return res.status(404).json({ error: 'Product not found' });
     }
@@ -103,6 +115,42 @@ exports.delete = async (req, res, next) => {
   }
 };
 
+exports.duplicate = async (req, res, next) => {
+  try {
+    const product = await Product.duplicate(req.params.id, req.params.storeId);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    res.status(201).json({ success: true, data: product });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const bulkValidation = [
+  body('ids').isArray({ min: 1 }).withMessage('ids array is required'),
+  body('ids.*').isUUID(),
+  body('updates').isObject().withMessage('updates object is required'),
+  body('updates.status').optional().isIn(['draft', 'active', 'archived']),
+  body('updates.is_available').optional().isBoolean(),
+  body('updates.is_featured').optional().isBoolean(),
+  body('updates.category_id').optional({ nullable: true }).isUUID(),
+  validate
+];
+
+exports.bulkUpdate = [
+  ...bulkValidation,
+  validate,
+  async (req, res, next) => {
+    try {
+      const products = await Product.bulkUpdate(req.params.storeId, req.body.ids, req.body.updates);
+      res.json({ success: true, data: products });
+    } catch (error) {
+      next(error);
+    }
+  }
+];
+
 exports.uploadImage = async (req, res, next) => {
   try {
     if (!req.file) {
@@ -110,7 +158,7 @@ exports.uploadImage = async (req, res, next) => {
     }
 
     // Construct public URL
-    const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`;
+    const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5001}`;
     const publicUrl = `${baseUrl}/uploads/${req.params.storeId}/${req.file.filename}`;
 
     res.json({

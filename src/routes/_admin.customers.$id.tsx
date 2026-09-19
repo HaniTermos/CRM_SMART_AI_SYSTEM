@@ -159,7 +159,7 @@ function CustomerDetail() {
                       </tr>
                     </thead>
                     <tbody>
-                      {orders.map((o) => (
+                      {orders.map((o: { id: string; order_number: string; status: string; total: number | string; created_at: string }) => (
                         <tr key={o.id} className="border-b last:border-0 hover:bg-accent/40">
                           <td className="p-3 font-mono">
                             <Link to="/orders/$id" params={{ id: o.id }} className="text-primary hover:underline">
@@ -186,7 +186,7 @@ function CustomerDetail() {
                   <p className="p-6 text-sm text-muted-foreground">No activity yet.</p>
                 ) : (
                   <ul className="divide-y">
-                    {activities.map((a) => (
+                    {activities.map((a: { id: string; type: string; payload: Record<string, unknown>; created_at: string }) => (
                       <li key={a.id} className="flex items-start gap-3 p-4 text-sm">
                         <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
                         <div className="flex-1">

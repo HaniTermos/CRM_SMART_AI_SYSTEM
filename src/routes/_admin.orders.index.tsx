@@ -65,7 +65,7 @@ function OrdersList() {
                 </tr>
               </thead>
               <tbody>
-                {orders.map((o) => {
+                {orders.map((o: { id: string; order_number: string; status: string; total: number | string; created_at: string; customers?: unknown }) => {
                   const cust = Array.isArray(o.customers) ? o.customers[0] : (o.customers as { name: string | null; phone: string } | null);
                   return (
                     <tr key={o.id} className="border-b last:border-0 hover:bg-accent/40">

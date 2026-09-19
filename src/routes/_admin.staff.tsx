@@ -56,13 +56,13 @@ const seedShifts = (): Shift[] => [
     { id: "sh4", staffId: "st2", day: "2026-08-04", start: "08:00", end: "16:00", status: "scheduled" },
 ];
 
-const ROLE_COLORS: Record<string, string> = {
+const ROLE_COLORS: Record<string, "default" | "destructive" | "outline" | "secondary" | "info" | "aqua" | "violet" | "success" | "warning"> = {
     Owner: "violet",
     Manager: "aqua",
     Chef: "warning",
     Server: "success",
     Cashier: "secondary",
-    Delivery: "danger",
+    Delivery: "destructive",
 };
 
 function StaffRoute() {
@@ -154,7 +154,7 @@ function StaffRoute() {
                                         <p className="text-sm font-medium text-adaptive">{member?.name || "Unknown"}</p>
                                         <p className="text-xs text-adaptive-muted">{shift.start} — {shift.end}</p>
                                     </div>
-                                    <IOSBadge variant={shift.status === "completed" ? "success" : shift.status === "absent" ? "danger" : "warning"} size="sm">{shift.status}</IOSBadge>
+                                    <IOSBadge variant={shift.status === "completed" ? "success" : shift.status === "absent" ? "destructive" : "warning"} size="sm">{shift.status}</IOSBadge>
                                     <div className="flex gap-1">
                                         <button onClick={() => saveShifts(shifts.map((s) => (s.id === shift.id ? { ...s, status: "completed" } : s)))} className="p-1.5 rounded-lg hover:bg-emerald-500/10 text-adaptive-muted hover:text-emerald-500"><CheckCircle2 className="h-4 w-4" /></button>
                                         <button onClick={() => saveShifts(shifts.map((s) => (s.id === shift.id ? { ...s, status: "absent" } : s)))} className="p-1.5 rounded-lg hover:bg-red-500/10 text-adaptive-muted hover:text-red-500"><XCircle className="h-4 w-4" /></button>

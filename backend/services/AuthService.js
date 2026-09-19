@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const UserPreference = require('../models/UserPreference');
 const db = require('../config/database');
 
 class AuthService {
@@ -12,9 +13,11 @@ class AuthService {
     }
 
     const user = await User.create({ email, password, name, role });
+    const preferences = await UserPreference.createDefaults(user.id);
     const token = this.generateToken(user);
     const storeCount = await db.query('SELECT COUNT(*) FROM user_roles WHERE user_id = $1', [user.id]);
     user.has_store = parseInt(storeCount.rows[0].count) > 0;
+    user.preferences = preferences;
 
     return { user, token };
   }
@@ -45,6 +48,7 @@ class AuthService {
     const token = this.generateToken(safeUser);
     const storeCount = await db.query('SELECT COUNT(*) FROM user_roles WHERE user_id = $1', [user.id]);
     safeUser.has_store = parseInt(storeCount.rows[0].count) > 0;
+    safeUser.preferences = await UserPreference.findByUserId(user.id) || await UserPreference.createDefaults(user.id);
 
     return { user: safeUser, token };
   }
@@ -56,10 +60,11 @@ class AuthService {
       error.statusCode = 404;
       throw error;
     }
-    
+
     const storeCount = await db.query('SELECT COUNT(*) FROM user_roles WHERE user_id = $1', [user.id]);
     user.has_store = parseInt(storeCount.rows[0].count) > 0;
-    
+    user.preferences = await UserPreference.findByUserId(userId) || await UserPreference.createDefaults(userId);
+
     return user;
   }
 

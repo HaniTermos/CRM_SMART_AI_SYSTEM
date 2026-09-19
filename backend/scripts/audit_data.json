@@ -1,0 +1,254 @@
+{
+  "storeAudits": [
+    {
+      "id": "2d9b6e0f-c256-426b-ba8c-e3976d1ee109",
+      "name": "Arabi Cast",
+      "slug": "arabicast",
+      "v3Enabled": false,
+      "activeThemeId": "ab2d8fe3-4240-42ed-9b1e-a03e51beceef",
+      "pageCount": 3,
+      "versionCount": 3,
+      "publishedVersions": 3,
+      "draftVersions": 0,
+      "themeCount": 1,
+      "navRegions": "header (4 items), footer (3 items)",
+      "mediaUsageCount": 10,
+      "validAstCount": 3,
+      "invalidAstCount": 0,
+      "pages": [
+        {
+          "title": "About Us",
+          "slug": "about",
+          "isPublished": true,
+          "versionCount": 1,
+          "hasPublishedVersion": true,
+          "astValid": "VALID",
+          "traceability": "Migrated from legacy page eebdf6cc-c0bc-4e6a-b388-4b253bddf708"
+        },
+        {
+          "title": "Contact",
+          "slug": "contact",
+          "isPublished": true,
+          "versionCount": 1,
+          "hasPublishedVersion": true,
+          "astValid": "VALID",
+          "traceability": "Migrated from legacy page 181a4449-433a-47b8-80e6-59f9dc633a61"
+        },
+        {
+          "title": "Home",
+          "slug": "home",
+          "isPublished": true,
+          "versionCount": 1,
+          "hasPublishedVersion": true,
+          "astValid": "VALID",
+          "traceability": "Migrated from legacy page ec2cb018-b97b-421e-886c-08aa68bf41f5"
+        }
+      ]
+    },
+    {
+      "id": "e21bba08-4842-41f9-b669-79b10c292b0c",
+      "name": "Green Bowl",
+      "slug": "green-bowl",
+      "v3Enabled": false,
+      "activeThemeId": "6e4685b1-d950-4ecf-a9ea-712994eeb60b",
+      "pageCount": 3,
+      "versionCount": 3,
+      "publishedVersions": 3,
+      "draftVersions": 0,
+      "themeCount": 1,
+      "navRegions": "header (4 items), footer (3 items)",
+      "mediaUsageCount": 10,
+      "validAstCount": 3,
+      "invalidAstCount": 0,
+      "pages": [
+        {
+          "title": "About Us",
+          "slug": "about",
+          "isPublished": true,
+          "versionCount": 1,
+          "hasPublishedVersion": true,
+          "astValid": "VALID",
+          "traceability": "Migrated from legacy page cdf36712-7d5c-405d-a784-eef1f5da3dd9"
+        },
+        {
+          "title": "Contact",
+          "slug": "contact",
+          "isPublished": true,
+          "versionCount": 1,
+          "hasPublishedVersion": true,
+          "astValid": "VALID",
+          "traceability": "Migrated from legacy page a74a59d9-8b9e-4307-a38b-866bec2358f7"
+        },
+        {
+          "title": "Home",
+          "slug": "home",
+          "isPublished": true,
+          "versionCount": 1,
+          "hasPublishedVersion": true,
+          "astValid": "VALID",
+          "traceability": "Migrated from legacy page 2fe2d0b4-dcc5-4d17-96ae-378a87fb7b68"
+        }
+      ]
+    },
+    {
+      "id": "ba9f1dec-a39d-4f10-ae18-67f40eaee059",
+      "name": "Pasta Parlor",
+      "slug": "pasta-parlor",
+      "v3Enabled": false,
+      "activeThemeId": "39e34cc8-5c64-47dd-9a01-dd7e796d6db3",
+      "pageCount": 3,
+      "versionCount": 3,
+      "publishedVersions": 3,
+      "draftVersions": 0,
+      "themeCount": 1,
+      "navRegions": "header (4 items), footer (3 items)",
+      "mediaUsageCount": 10,
+      "validAstCount": 3,
+      "invalidAstCount": 0,
+      "pages": [
+        {
+          "title": "About Us",
+          "slug": "about",
+          "isPublished": true,
+          "versionCount": 1,
+          "hasPublishedVersion": true,
+          "astValid": "VALID",
+          "traceability": "Migrated from legacy page e26a6ce4-9be8-49b8-b38b-29716189e9f5"
+        },
+        {
+          "title": "Contact",
+          "slug": "contact",
+          "isPublished": true,
+          "versionCount": 1,
+          "hasPublishedVersion": true,
+          "astValid": "VALID",
+          "traceability": "Migrated from legacy page b7ba2820-b770-4818-9f1e-7cc693decf93"
+        },
+        {
+          "title": "Home",
+          "slug": "home",
+          "isPublished": true,
+          "versionCount": 1,
+          "hasPublishedVersion": true,
+          "astValid": "VALID",
+          "traceability": "Migrated from legacy page 5e3ec34f-a12e-4674-9267-16213aa42ba1"
+        }
+      ]
+    },
+    {
+      "id": "97900e09-1cbc-4da5-b5b7-8c695d7dd2f9",
+      "name": "Sunrise Bakery",
+      "slug": "sunrise-bakery",
+      "v3Enabled": true,
+      "activeThemeId": "5096837d-9655-4a46-9eba-f7d5c1cf30aa",
+      "pageCount": 9,
+      "versionCount": 33,
+      "publishedVersions": 12,
+      "draftVersions": 1,
+      "themeCount": 1,
+      "navRegions": "header (4 items), footer (3 items), mobile_drawer (1 items)",
+      "mediaUsageCount": 20,
+      "validAstCount": 5,
+      "invalidAstCount": 0,
+      "pages": [
+        {
+          "title": "About Us",
+          "slug": "about",
+          "isPublished": true,
+          "versionCount": 2,
+          "hasPublishedVersion": true,
+          "astValid": "VALID",
+          "traceability": "Migrated from legacy page 27d81a7c-270f-43a8-aaf1-421271705381"
+        },
+        {
+          "title": "Acceptance Page Updated",
+          "slug": "acc-test-page-1786968870927",
+          "isPublished": false,
+          "versionCount": 1,
+          "hasPublishedVersion": false,
+          "astValid": "NO_PUBLISHED_VERSION",
+          "traceability": "N/A"
+        },
+        {
+          "title": "Acceptance Page Updated",
+          "slug": "acc-test-page-1786968915918",
+          "isPublished": true,
+          "versionCount": 1,
+          "hasPublishedVersion": false,
+          "astValid": "NO_PUBLISHED_VERSION",
+          "traceability": "N/A"
+        },
+        {
+          "title": "Contact",
+          "slug": "contact",
+          "isPublished": true,
+          "versionCount": 2,
+          "hasPublishedVersion": true,
+          "astValid": "VALID",
+          "traceability": "Migrated from legacy page 8fa2c1da-fd65-4f2b-bf64-7a780d3f5ba2"
+        },
+        {
+          "title": "Hero Test Page",
+          "slug": "hero-test-page",
+          "isPublished": true,
+          "versionCount": 9,
+          "hasPublishedVersion": true,
+          "astValid": "VALID",
+          "traceability": "Rollback to Version #7"
+        },
+        {
+          "title": "Home",
+          "slug": "home",
+          "isPublished": true,
+          "versionCount": 3,
+          "hasPublishedVersion": true,
+          "astValid": "VALID",
+          "traceability": "Migrated from legacy page 5652bd00-22d1-4209-8fb7-232842000ae9"
+        },
+        {
+          "title": "Home Staging",
+          "slug": "home-staging",
+          "isPublished": true,
+          "versionCount": 1,
+          "hasPublishedVersion": false,
+          "astValid": "NO_PUBLISHED_VERSION",
+          "traceability": "N/A"
+        },
+        {
+          "title": "Inspector Test Page",
+          "slug": "inspector-test-page",
+          "isPublished": false,
+          "versionCount": 9,
+          "hasPublishedVersion": false,
+          "astValid": "NO_PUBLISHED_VERSION",
+          "traceability": "N/A"
+        },
+        {
+          "title": "Stage 2 Full Test Page",
+          "slug": "stage2-test-page",
+          "isPublished": true,
+          "versionCount": 5,
+          "hasPublishedVersion": true,
+          "astValid": "VALID",
+          "traceability": "Stage 2 Container & Primitives Draft"
+        }
+      ]
+    }
+  ],
+  "crossPageLeak": 0,
+  "crossSiteLeak": 0,
+  "fp": {
+    "products": 44,
+    "orders": 80,
+    "order_items": 187,
+    "customers": 48,
+    "reservations": 40,
+    "inventory_adjustments": 40,
+    "cms_pages": 12,
+    "cms_page_sections": 17,
+    "cms_settings": 4,
+    "cms_navigation_items": 28,
+    "cms_media": 40,
+    "cms_themes": 29
+  }
+}

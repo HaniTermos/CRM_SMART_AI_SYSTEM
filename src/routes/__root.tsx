@@ -9,12 +9,13 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import "@/styles/theme.css";
-import { ThemeProvider } from "@/components/theme-provider";
+import { DashboardThemeProvider } from "@/components/theme-provider";
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/Navbar";
 import { FooterSection } from "@/components/homepage/FooterSection";
+import { TerminalHealthChecker } from "@/components/common/TerminalHealthChecker";
 
 function NotFoundComponent() {
   return (
@@ -135,18 +136,26 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith("/_admin") || location.pathname.startsWith("/dashboard");
+
+  const isPublicMarketing =
+    location.pathname === "/" ||
+    location.pathname.startsWith("/about") ||
+    location.pathname.startsWith("/services") ||
+    location.pathname.startsWith("/blog") ||
+    location.pathname.startsWith("/contact") ||
+    location.pathname.startsWith("/faq");
 
   return (
-    <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          {!isAdmin && <Navbar />}
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <DashboardThemeProvider>
+          <TerminalHealthChecker />
+          {isPublicMarketing && <Navbar />}
           <Outlet />
-          {!isAdmin && <FooterSection />}
+          {isPublicMarketing && <FooterSection />}
           <Toaster />
-        </AuthProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+        </DashboardThemeProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

@@ -1,334 +1,380 @@
-import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { Sparkles, Send, Bot, User, Check, AlertTriangle, ShieldCheck, Play, ArrowRight, X, Cpu, DollarSign, History, Layers, TrendingUp } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useMyStore } from "@/lib/use-my-store";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, Clock, Send, Zap, CircleOff, Bot, User, Loader2, ShieldCheck, Lightbulb } from "lucide-react";
+import { IOSCard } from "@/components/ui/ios-card";
+import { IOSButton } from "@/components/ui/ios-button";
+import { IOSBadge } from "@/components/ui/ios-badge";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_admin/ai")({
-  component: AiPage,
+  component: AIRoute,
 });
 
-type ChatMessage = {
-  role: "user" | "assistant";
-  text: string;
-  model?: string;
-  guarded?: boolean;
-};
+interface ActionPlan {
+  id: string;
+  title: string;
+  summary: string;
+  status: "proposed" | "approved" | "completed" | "cancelled";
+  created_at: string;
+}
 
-const EXAMPLE_PROMPTS = [
-  "Write 3 subject lines for a summer sale",
-  "Suggest a discount strategy for inactive customers",
-  "Explain what my dashboard metrics mean",
-  "Help me name a new organic skincare product",
-  "How do I use the CRM pipeline for deals?",
-  "What should I do with my at-risk customers?",
-];
-
-function AiPage() {
+function AIRoute() {
+  const queryClient = useQueryClient();
   const { data: store } = useMyStore();
+  const storeId = store?.id;
 
-  const [prompt, setPrompt] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [activeConvId, setActiveConvId] = useState<string | null>(null);
+  const [input, setInput] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState<ActionPlan | null>(null);
+  const [proceedingPlan, setProceedingPlan] = useState<ActionPlan | null>(null);
+  const [proceedingStep, setProceedingStep] = useState(0);
 
-  const { data: status } = useQuery({
-    queryKey: ["ai-status", store?.id],
-    enabled: !!store?.id,
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Fetch Conversations
+  const { data: conversations = [] } = useQuery({
+    queryKey: ["ai-conversations", storeId],
+    enabled: !!storeId,
     queryFn: async () => {
-      const res = await api.get(`/ai/${store!.id}/status`);
-      return res.data.data;
+      const res = await api.get(`/stores/me/ai/conversations`);
+      return res.data.conversations || [];
     },
   });
 
-  const { data: reengagement = [] } = useQuery({
-    queryKey: ["ai-reengagement", store?.id],
-    enabled: !!store?.id,
+  // Fetch Action Plans
+  const { data: actionPlans = [] } = useQuery({
+    queryKey: ["ai-action-plans", storeId],
+    enabled: !!storeId,
     queryFn: async () => {
-      const res = await api.get(`/ai/${store!.id}/reengagement`);
-      return res.data.data;
+      const res = await api.get(`/stores/me/ai/action-plans`);
+      return res.data.action_plans || [];
     },
   });
 
-  const { data: recentInsights = [] } = useQuery({
-    queryKey: ["ai-recent-insights", store?.id],
-    enabled: !!store?.id,
+  // Fetch Credits
+  const { data: creditsData } = useQuery({
+    queryKey: ["ai-credits", storeId],
+    enabled: !!storeId,
     queryFn: async () => {
-      const res = await api.get(`/ai/${store!.id}/recent-insights`);
-      return res.data.data;
+      const res = await api.get(`/stores/me/ai/credits`);
+      return res.data;
     },
   });
 
-  const chatMut = useMutation({
-    mutationFn: async (text: string) => {
-      const res = await api.post(`/ai/${store!.id}/chat`, {
-        prompt: text,
-        context: "general",
+  // Fetch Messages for active conversation
+  const { data: activeConvData } = useQuery({
+    queryKey: ["ai-messages", activeConvId],
+    enabled: !!activeConvId,
+    queryFn: async () => {
+      const res = await api.get(`/stores/me/ai/conversations/${activeConvId}`);
+      return res.data;
+    },
+  });
+
+  const messages = activeConvData?.messages || [];
+
+  // Scroll to bottom on message updates
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Send Message Mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: async (content: string) => {
+      const res = await api.post(`/stores/me/ai/conversations/${activeConvId || "new"}/messages`, {
+        content,
+        conversation_id: activeConvId,
       });
-      return res.data.data;
+      return res.data;
     },
     onSuccess: (data) => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          text: data.text,
-          model: data.model,
-          guarded: data.guarded,
-        },
-      ]);
+      setInput("");
+      if (data.conversation_id && !activeConvId) {
+        setActiveConvId(data.conversation_id);
+      }
+      queryClient.invalidateQueries({ queryKey: ["ai-conversations", storeId] });
+      queryClient.invalidateQueries({ queryKey: ["ai-messages", activeConvId || data.conversation_id] });
+      queryClient.invalidateQueries({ queryKey: ["ai-action-plans", storeId] });
+      queryClient.invalidateQueries({ queryKey: ["ai-credits", storeId] });
     },
-    onError: (e: any) => {
-      const msg = e?.response?.data?.error || e?.message || "AI request failed";
-      toast.error(msg);
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", text: `Error: ${msg}` },
-      ]);
+    onError: (err: any) => {
+      toast.error(err.response?.data?.error || "Failed to send message to AI copilot");
     },
   });
 
-  const sendMessage = () => {
-    if (!prompt.trim()) return;
-    const text = prompt.trim();
-    setMessages((prev) => [...prev, { role: "user", text }]);
-    setPrompt("");
-    chatMut.mutate(text);
+  // Proceed Action Plan Mutation
+  const proceedPlanMutation = useMutation({
+    mutationFn: async (planId: string) => {
+      const res = await api.post(`/stores/me/ai/action-plans/${planId}/proceed`);
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("Action Plan executed successfully!");
+      setProceedingPlan(null);
+      queryClient.invalidateQueries({ queryKey: ["ai-action-plans", storeId] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.error || "Failed to proceed with Action Plan");
+      setProceedingPlan(null);
+    },
+  });
+
+  const handleProceed = (plan: ActionPlan) => {
+    setProceedingPlan(plan);
+    setProceedingStep(1);
+    setTimeout(() => setProceedingStep(2), 1000);
+    setTimeout(() => {
+      proceedPlanMutation.mutate(plan.id);
+    }, 2000);
   };
 
-  const isLive = status?.connected;
+  const suggestions = [
+    "Analyze today's revenue & order velocity",
+    "Identify top 5 slow-moving inventory items",
+    "Draft a win-back email for 30-day inactive customers",
+    "Simulate impact of 10% price increase on burgers",
+  ];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 p-6 md:p-10">
-      <header className="flex flex-wrap items-start justify-between gap-4">
+    <div className="space-y-6 max-w-7xl mx-auto p-6">
+      {/* Top Banner */}
+      <div className="glass-card p-6 flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
-          <h1 className="inline-flex items-center gap-2 text-3xl font-bold tracking-tight text-adaptive">
-            <Sparkles className="h-6 w-6 text-primary" /> AI Assistant
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" /> SmartStore AI Studio
           </h1>
-          <p className="mt-1 text-muted-foreground">
-            Your store-growth copilot. Ask about products, campaigns, customers, reports, and demand scoring.
+          <p className="text-xs text-muted-foreground mt-1">
+            Store-scoped AI copilot with action plan execution, credit management, and context awareness.
           </p>
         </div>
-        {status ? (
-          <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${isLive ? "border-green-200 bg-green-50 text-green-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}>
-            {isLive ? <Zap className="h-3 w-3" /> : <CircleOff className="h-3 w-3" />}
-            {isLive ? `Gemini Live · ${status.model}` : "Fallback Mode"}
-          </div>
-        ) : null}
-      </header>
 
-      {/* Scope Banner */}
-      <div className="flex items-start gap-3 rounded-lg border bg-muted/30 px-4 py-3 text-sm">
-        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-        <div>
-          <p className="font-medium">SmartStore AI Copilot</p>
-          <p className="text-muted-foreground">
-            I help with store operations only — products, inventory, orders, customers, CRM, campaigns, discounts, reviews, reports, and demand scoring.
-          </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link to="/ai-insights">
+            <IOSButton variant="outline" size="sm" className="gap-1.5 text-xs">
+              <TrendingUp className="h-3.5 w-3.5 text-primary" /> Demand & Insights
+            </IOSButton>
+          </Link>
+          <div className="px-3 py-1.5 rounded-xl bg-muted/60 text-xs font-mono flex items-center gap-2">
+            <Cpu className="h-4 w-4 text-emerald-500" />
+            <span>Credits: {creditsData?.balance?.credits_remaining ?? 1000} / 1000</span>
+          </div>
+          <IOSBadge variant="success" size="sm">Gemini 2.0 Flash Active</IOSBadge>
         </div>
       </div>
 
-      {/* Chat Interface */}
-      <Card className="overflow-hidden">
-        <CardContent className="p-0">
-          <div className="border-b bg-muted/30 px-4 py-3">
-            <h2 className="inline-flex items-center gap-2 text-sm font-semibold">
-              <Bot className="h-4 w-4 text-primary" /> Ask SmartStore AI
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              {isLive
-                ? "Type any question about your store, customers, or marketing."
-                : "Gemini API key not set or running in fallback mode."}
-            </p>
+      {/* Main Studio Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Chat / Interaction Console (2 Cols) */}
+        <div className="lg:col-span-2 glass-card p-5 flex flex-col h-[650px]">
+          {/* Messages View */}
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            {messages.map((msg: any) => (
+              <div
+                key={msg.id}
+                className={cn(
+                  "flex gap-3 text-xs leading-relaxed",
+                  msg.role === "user" ? "flex-row-reverse" : "flex-row"
+                )}
+              >
+                <div
+                  className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-white font-bold",
+                    msg.role === "user" ? "bg-primary" : "bg-gradient-to-br from-indigo-500 to-purple-600"
+                  )}
+                >
+                  {msg.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                </div>
+
+                <div
+                  className={cn(
+                    "p-4 rounded-2xl max-w-[85%] space-y-2",
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground rounded-tr-none"
+                      : "bg-muted/70 text-foreground border border-border/50 rounded-tl-none"
+                  )}
+                >
+                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                </div>
+              </div>
+            ))}
+
+            {messages.length === 0 && (
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-[#CF00FF] text-white flex items-center justify-center shrink-0">
+                  <Bot className="h-4 w-4" />
+                </div>
+                <div className="glass-card p-4 text-xs leading-relaxed max-w-[85%] space-y-2">
+                  <p className="font-semibold text-foreground">Welcome to SmartStore AI Studio!</p>
+                  <p className="text-muted-foreground">
+                    I have full live context of <strong>{store?.name || "your store"}</strong>. You can ask me to generate promotional campaigns, analyze revenue patterns, propose inventory adjustments, or execute action plans.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {sendMessageMutation.isPending && (
+              <div className="flex gap-3 animate-pulse">
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <Bot className="h-4 w-4 text-primary" />
+                </div>
+                <div className="glass-card p-3 text-xs text-muted-foreground">
+                  Thinking and formulating structured response...
+                </div>
+              </div>
+            )}
+            <div ref={bottomRef} />
           </div>
 
-          <div className="flex h-96 flex-col">
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center text-center">
-                  <Bot className="mb-3 h-10 w-10 text-primary/30" />
-                  <p className="text-sm font-medium">How can I help your store today?</p>
-                  <p className="text-xs text-muted-foreground mt-1 max-w-sm">
-                    I can help you write campaigns, suggest product ideas, explain reports, review customers, improve discounts, and recommend next actions.
-                  </p>
-                  <div className="mt-4 flex flex-wrap justify-center gap-2">
-                    {EXAMPLE_PROMPTS.map((ex) => (
-                      <button
-                        key={ex}
-                        onClick={() => {
-                          setPrompt(ex);
-                        }}
-                        className="rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-                      >
-                        <Lightbulb className="mr-1 inline h-3 w-3" />
-                        {ex}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                messages.map((m, i) => (
-                  <div key={i} className={`flex gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                    {m.role === "assistant" && (
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                        {m.guarded ? <ShieldCheck className="h-4 w-4 text-primary" /> : <Bot className="h-4 w-4 text-primary" />}
-                      </div>
-                    )}
-                    <div className={`max-w-[80%] rounded-xl px-4 py-2 text-sm ${m.role === "user" ? "bg-primary text-primary-foreground" : "border bg-muted/30"}`}>
-                      <p className="whitespace-pre-wrap">{m.text}</p>
-                      {m.model ? (
-                        <p className="mt-1 text-[10px] text-muted-foreground">{m.model}</p>
-                      ) : null}
+          {/* Prompt Input */}
+          <div className="space-y-3 pt-3 border-t">
+            <div className="flex flex-wrap gap-1.5">
+              {suggestions.map((s, i) => (
+                <button
+                  key={i}
+                  onClick={() => setInput(s)}
+                  className="px-2.5 py-1 rounded-full text-[11px] bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors border border-border/40"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && sendMessageMutation.mutate(input)}
+                placeholder="Type your instruction or prompt for SmartStore AI..."
+                className="flex-1 bg-muted/50 rounded-xl px-4 py-2.5 text-xs outline-none focus:ring-2 focus:ring-primary/30 border border-border/40"
+              />
+              <IOSButton
+                variant="gradient"
+                size="sm"
+                onClick={() => sendMessageMutation.mutate(input)}
+                isLoading={sendMessageMutation.isPending}
+                className="gap-1.5"
+              >
+                <Send className="h-3.5 w-3.5" /> Send
+              </IOSButton>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Plans & History Side Panel */}
+        <div className="space-y-6">
+          <IOSCard className="p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm flex items-center gap-2">
+                <Layers className="h-4 w-4 text-primary" /> Proposed Action Plans
+              </h3>
+              <IOSBadge variant="secondary" size="sm">{actionPlans.length}</IOSBadge>
+            </div>
+
+            {actionPlans.length === 0 ? (
+              <div className="p-4 text-center text-xs text-muted-foreground bg-muted/20 rounded-xl">
+                No active proposed action plans. Ask AI to generate a growth strategy to see actionable plans here.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {actionPlans.map((plan: ActionPlan) => (
+                  <div key={plan.id} className="p-3.5 rounded-xl border border-border/60 bg-card space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <h4 className="font-bold text-xs">{plan.title}</h4>
+                      <IOSBadge variant={plan.status === "approved" ? "success" : "warning"} size="sm">
+                        {plan.status}
+                      </IOSBadge>
                     </div>
-                    {m.role === "user" && (
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    )}
+                    <p className="text-[11px] text-muted-foreground line-clamp-2">{plan.summary}</p>
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40">
+                      <IOSButton
+                        variant="gradient"
+                        size="pill"
+                        onClick={() => handleProceed(plan)}
+                        className="gap-1 text-[11px] h-7 px-3"
+                      >
+                        <Play className="h-3 w-3" /> Proceed
+                      </IOSButton>
+                    </div>
                   </div>
-                ))
-              )}
-              {chatMut.isPending && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  SmartStore AI is thinking…
-                </div>
+                ))}
+              </div>
+            )}
+          </IOSCard>
+
+          <IOSCard className="p-5 space-y-3">
+            <h3 className="font-bold text-sm flex items-center gap-2">
+              <History className="h-4 w-4 text-muted-foreground" /> Session History
+            </h3>
+            {conversations.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No past conversation sessions found.</p>
+            ) : (
+              <ul className="space-y-1.5 text-xs">
+                {conversations.slice(0, 5).map((conv: any) => (
+                  <li
+                    key={conv.id}
+                    onClick={() => setActiveConvId(conv.id)}
+                    className={cn(
+                      "p-2 rounded-lg cursor-pointer truncate transition-colors",
+                      activeConvId === conv.id ? "bg-primary/10 font-bold text-primary" : "hover:bg-muted"
+                    )}
+                  >
+                    {conv.title || "Untitled Session"}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </IOSCard>
+        </div>
+      </div>
+
+      {/* Proceed Confirmation & Progress Modal */}
+      {proceedingPlan && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="glass-card max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-base flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-emerald-500" /> Executing Action Plan
+              </h3>
+              {proceedingStep === 2 && (
+                <button onClick={() => setProceedingPlan(null)} className="p-1 rounded-lg hover:bg-muted"><X className="h-5 w-5" /></button>
               )}
             </div>
 
-            <div className="border-t p-3">
-              <div className="flex gap-2">
-                <Textarea
-                  rows={1}
-                  className="min-h-0 resize-none"
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                  }}
-                  placeholder="Ask about your store…"
-                  disabled={chatMut.isPending}
-                />
-                <Button
-                  size="icon"
-                  onClick={sendMessage}
-                  disabled={!prompt.trim() || chatMut.isPending}
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
+            <p className="text-xs text-muted-foreground">
+              Executing: <strong>{proceedingPlan.title}</strong>
+            </p>
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 text-xs">
+                <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold", proceedingStep >= 1 ? "bg-emerald-500 text-white" : "bg-muted")}>1</div>
+                <span>Validating store permissions & scope</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs">
+                <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold", proceedingStep >= 2 ? "bg-emerald-500 text-white" : "bg-muted")}>2</div>
+                <span>Dispatching transactional updates to database</span>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      <section className="space-y-3">
-        <h2 className="inline-flex items-center gap-2 font-semibold">
-          <Clock className="h-4 w-4" /> Re-engagement candidates
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Customers who haven't ordered in 30+ days (or never ordered), sorted by lifetime value.
-        </p>
-        {reengagement.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center text-muted-foreground">
-              <p className="font-medium text-foreground">No re-engagement candidates</p>
-              <p className="text-sm mt-1">All your customers have ordered recently or are marked as churned.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="p-0">
-              <table className="w-full text-sm">
-                <thead className="border-b bg-muted/40 text-left">
-                  <tr>
-                    <th className="p-3">Customer</th>
-                    <th className="p-3">Segment</th>
-                    <th className="p-3">Orders</th>
-                    <th className="p-3">Spent</th>
-                    <th className="p-3">Last order</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reengagement.map((c: any) => (
-                    <tr key={c.id} className="border-b last:border-0 hover:bg-accent/40">
-                      <td className="p-3">
-                        <Link to="/customers/$id" params={{ id: c.id }} className="font-medium text-primary hover:underline">
-                          {c.name ?? "Unnamed"}
-                        </Link>
-                        <div className="text-xs text-muted-foreground">{c.phone}</div>
-                      </td>
-                      <td className="p-3"><Badge variant="secondary">{c.segment}</Badge></td>
-                      <td className="p-3">{c.total_orders}</td>
-                      <td className="p-3">{store?.currency} {Number(c.total_spent).toFixed(2)}</td>
-                      <td className="p-3 text-muted-foreground">
-                        {c.last_order_at ? new Date(c.last_order_at).toLocaleDateString() : "Never ordered"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
-        )}
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="font-semibold">Recent AI insights</h2>
-        {recentInsights.length === 0 ? (
-          <Card><CardContent className="p-8 text-center text-muted-foreground">No AI insights yet. Go to a customer page and click "Generate" to create one.</CardContent></Card>
-        ) : (
-          <div className="grid gap-3">
-            {recentInsights.map((i: any) => {
-              const recs = Array.isArray(i.recommendations)
-                ? i.recommendations.filter((r: any) => typeof r === 'string')
-                : [];
-              return (
-                <Card key={i.id}>
-                  <CardContent className="space-y-2 p-4 text-sm">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          to="/customers/$id"
-                          params={{ id: i.customer_id ?? "" }}
-                          className="font-medium text-primary hover:underline"
-                        >
-                          {i.customer_name || "Customer"}
-                        </Link>
-                        {recs.length > 0 && (
-                          <div className="flex gap-1">
-                            {recs.slice(0, 2).map((r: string) => (
-                              <Badge key={r} variant="outline" className="text-[10px]">{r}</Badge>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(i.created_at).toLocaleString()}
-                      </span>
-                    </div>
-                    <p>{i.summary}</p>
-                    <p className="text-muted-foreground"><span className="font-medium text-foreground">Next action:</span> {i.next_action}</p>
-                    {i.email_subject ? (
-                      <p className="text-xs text-muted-foreground">Draft: "{i.email_subject}"</p>
-                    ) : null}
-                    {i.model ? (
-                      <p className="text-[11px] text-muted-foreground">{i.model}</p>
-                    ) : null}
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {proceedingStep < 2 ? (
+              <div className="flex items-center justify-center py-4 gap-2 text-xs text-primary font-medium">
+                <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                Processing saga execution...
+              </div>
+            ) : (
+              <div className="pt-2 text-right">
+                <IOSButton variant="gradient" size="sm" onClick={() => setProceedingPlan(null)}>
+                  Close & Done
+                </IOSButton>
+              </div>
+            )}
           </div>
-        )}
-      </section>
+        </div>
+      )}
     </div>
   );
 }

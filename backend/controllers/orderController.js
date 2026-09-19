@@ -1,9 +1,9 @@
 const { body } = require('express-validator');
 const Order = require('../models/Order');
 const Customer = require('../models/Customer');
-const Product = require('../models/Product');
-const db = require('../config/database');
 const { validate } = require('../middlewares/validate');
+const orderService = require('../services/orderService');
+const orderLookupService = require('../services/orderLookupService');
 
 const checkoutValidation = [
   body('customer.name').notEmpty().trim(),
@@ -22,107 +22,30 @@ const updateStatusValidation = [
 ];
 
 /**
- * Public checkout endpoint.
- * Handles the full transaction: Upsert customer -> Check stock -> Create order -> Deduct stock -> Log activity
+ * Store-scoped checkout endpoint.
+ * Delegates to orderService.createOrder.
  */
 exports.checkout = [
   ...checkoutValidation,
   validate,
   async (req, res, next) => {
     try {
-      const { customer, shipping_address, items, discount_code, notes } = req.body;
+      const { customer, shipping_address, items, discount_code, notes, table_label, floor_id } = req.body;
       const storeId = req.params.storeId;
 
-      const result = await db.transaction(async (client) => {
-        // 1. Process customer (find or create by phone)
-        let dbCustomer = await Customer.findByPhone(storeId, customer.phone);
-        if (!dbCustomer) {
-          dbCustomer = await Customer.create({
-            store_id: storeId,
-            name: customer.name,
-            phone: customer.phone,
-            email: customer.email,
-            segment: 'new'
-          });
-        } else if (customer.name || customer.email) {
-          // Update details if they changed
-          dbCustomer = await Customer.update(dbCustomer.id, {
-            name: customer.name || dbCustomer.name,
-            email: customer.email || dbCustomer.email
-          }, client);
-        }
-
-        // 2. Validate products and calculate totals
-        let subtotal = 0;
-        const processedItems = [];
-
-        for (const item of items) {
-          const product = await Product.findById(item.product_id);
-          if (!product || product.store_id !== storeId) {
-            throw new Error(`Product ${item.product_id} not found`);
-          }
-          if (product.status !== 'active') {
-            throw new Error(`Product ${product.name} is not available`);
-          }
-          if (product.stock < item.quantity) {
-            throw new Error(`Not enough stock for ${product.name}. Available: ${product.stock}`);
-          }
-
-          const itemSubtotal = product.price * item.quantity;
-          subtotal += itemSubtotal;
-
-          processedItems.push({
-            product_id: product.id,
-            product_name: product.name,
-            unit_price: product.price,
-            quantity: item.quantity,
-            subtotal: itemSubtotal
-          });
-
-          // Deduct stock
-          await Product.updateStock(product.id, product.stock - item.quantity, client);
-        }
-
-        // 3. Process discount (simplified for MVP)
-        let discountAmount = 0;
-        if (discount_code) {
-          // A real implementation would query the discount_codes table
-          // For now, assume it's valid if passed (as frontend validates it)
-          // discountAmount = ... 
-        }
-
-        // 4. Calculate total
-        const shippingFee = req.store?.shipping_fee || 0; // Requires looking up store if not passed
-        const total = subtotal - discountAmount + Number(shippingFee);
-
-        // 5. Generate unique order number (e.g., ORD-123456)
-        const orderNumber = `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
-
-        // 6. Create order
-        const order = await Order.createWithItems({
-          store_id: storeId,
-          customer_id: dbCustomer.id,
-          order_number: orderNumber,
-          payment_method: 'cash_on_delivery',
-          subtotal,
-          shipping_fee: shippingFee,
-          discount_code,
-          discount_amount: discountAmount,
-          total,
-          shipping_address,
-          notes,
-          items: processedItems
-        }, client);
-
-        // 7. Log activity
-        await Customer.logActivity({
-          store_id: storeId,
-          customer_id: dbCustomer.id,
-          type: 'order_placed',
-          payload: { order_number: order.order_number, total: order.total }
-        }, client);
-
-        return order;
+      const result = await orderService.createOrder({
+        storeId,
+        customer,
+        address: shipping_address,
+        notes,
+        discount_code,
+        items,
+        table_label,
+        floor_id,
+        payment_method: req.body.payment_method,
+        payment_status: req.body.payment_status,
+        source: req.body.source,
+        logActivity: true
       });
 
       res.status(201).json({ success: true, data: result });
@@ -142,18 +65,13 @@ exports.lookupOrder = [
   async (req, res, next) => {
     try {
       const { order_number, phone } = req.body;
-      const order = await Order.findByNumber(req.params.storeId, order_number);
+      const result = await orderLookupService.lookupOrder({
+        storeId: req.params.storeId,
+        orderNumber: order_number,
+        phone
+      });
 
-      if (!order) {
-        return res.status(404).json({ error: 'Order not found' });
-      }
-
-      // Verify phone number (last 4 digits like the original SmartStore-AI logic)
-      if (!order.customer.phone.endsWith(phone.slice(-4))) {
-        return res.status(403).json({ error: 'Phone verification failed' });
-      }
-
-      res.json({ success: true, data: order });
+      res.json({ success: true, data: result });
     } catch (error) {
       next(error);
     }
@@ -186,7 +104,7 @@ exports.updateStatus = [
   validate,
   async (req, res, next) => {
     try {
-      const order = await Order.updateStatus(req.params.id, req.body.status);
+      const order = await Order.updateStatus(req.params.id, req.params.storeId, req.body.status);
       if (!order) {
         return res.status(404).json({ error: 'Order not found' });
       }
@@ -205,3 +123,30 @@ exports.updateStatus = [
     }
   }
 ];
+
+exports.updatePaymentStatus = [
+  body('payment_status').isIn(['unpaid', 'pending', 'paid', 'partially_paid', 'failed', 'refunded', 'partially_refunded']),
+  body('refunded_amount').optional().isNumeric(),
+  validate,
+  async (req, res, next) => {
+    try {
+      const { payment_status, refunded_amount } = req.body;
+      const order = await Order.updatePaymentStatus(req.params.id, req.params.storeId, payment_status, refunded_amount);
+      if (!order) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+
+      await Customer.logActivity({
+        store_id: req.params.storeId,
+        customer_id: order.customer_id,
+        type: 'order_payment_status_changed',
+        payload: { order_number: order.order_number, new_payment_status: payment_status, refunded_amount }
+      });
+
+      res.json({ success: true, data: order });
+    } catch (error) {
+      next(error);
+    }
+  }
+];
+

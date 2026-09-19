@@ -189,7 +189,7 @@ function DiscountsPage() {
             <p className="text-sm text-muted-foreground">No codes yet.</p>
           ) : (
             <div className="divide-y">
-              {codes.map((c) => {
+              {codes.map((c: { id: string; code: string; type: string; value: number; expires_at?: string; max_uses?: number; used_count?: number; is_active?: boolean; active?: boolean; min_subtotal?: number }) => {
                 const expired = c.expires_at && new Date(c.expires_at) < new Date();
                 const usedUp =
                   c.max_uses != null && (c.used_count ?? 0) >= c.max_uses;

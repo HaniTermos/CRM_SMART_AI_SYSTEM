@@ -217,7 +217,7 @@ export function ProductForm({ productId }: ProductFormProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none">Uncategorized</SelectItem>
-                  {categories.map((c) => (
+                  {categories.map((c: { id: string; name: string }) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.name}
                     </SelectItem>

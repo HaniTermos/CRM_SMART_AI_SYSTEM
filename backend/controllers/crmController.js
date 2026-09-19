@@ -94,6 +94,22 @@ exports.getDeals = async (req, res, next) => {
   }
 };
 
+exports.getDeal = async (req, res, next) => {
+  try {
+    const { storeId, dealId } = req.params;
+    const result = await db.query(
+      'SELECT d.*, c.name as customer_name FROM crm_deals d LEFT JOIN customers c ON d.customer_id = c.id WHERE d.id = $1 AND d.store_id = $2',
+      [dealId, storeId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Deal not found' });
+    }
+    res.json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.createDeal = async (req, res, next) => {
   try {
     const { storeId } = req.params;

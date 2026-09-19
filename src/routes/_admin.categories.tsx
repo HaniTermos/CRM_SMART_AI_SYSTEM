@@ -120,7 +120,7 @@ function CategoriesPage() {
             <p className="text-sm text-muted-foreground">No categories yet.</p>
           ) : (
             <ul className="divide-y">
-              {categories.map((c) => (
+              {categories.map((c: { id: string; name: string; slug: string }) => (
                 <li key={c.id} className="flex items-center justify-between py-3">
                   <div>
                     <p className="font-medium">{c.name}</p>

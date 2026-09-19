@@ -9,6 +9,9 @@ import {
 import { useTheme } from "@/components/theme-provider";
 import { getStorage, setStorage } from "@/lib/ssr-safe";
 
+import { useNavLayout } from "@/lib/nav-layout-context";
+import { LayoutGrid, PanelLeft } from "lucide-react";
+
 const TABS = [
   { id: "general", label: "General", icon: Store },
   { id: "branding", label: "Branding", icon: Palette },
@@ -23,6 +26,7 @@ const TABS = [
 export function SettingsPage() {
   const [activeTab, setActiveTab] = useState("general");
   const { isDark, toggleDark } = useTheme();
+  const { navMode, setNavMode } = useNavLayout();
 
   return (
     <div className="space-y-6">
@@ -53,13 +57,22 @@ export function SettingsPage() {
           })}
 
           <div className="mt-6 p-4 rounded-2xl glass-adaptive space-y-3">
-            <p className="text-xs font-semibold text-adaptive-muted uppercase tracking-wider">Appearance</p>
+            <p className="text-xs font-semibold text-adaptive-muted uppercase tracking-wider">Appearance & Layout</p>
             <button
               onClick={toggleDark}
               className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-adaptive-surface text-adaptive text-sm"
             >
               <span className="flex items-center gap-2">{isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />} Theme</span>
               <span className="text-xs text-adaptive-muted">{isDark ? "Dark" : "Light"}</span>
+            </button>
+            <button
+              onClick={() => setNavMode(navMode === "dock" ? "sidebar" : "dock")}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-adaptive-surface text-adaptive text-sm"
+            >
+              <span className="flex items-center gap-2">
+                {navMode === "dock" ? <PanelLeft className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />} Navigation
+              </span>
+              <span className="text-xs text-adaptive-muted capitalize">{navMode}</span>
             </button>
           </div>
         </div>

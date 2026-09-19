@@ -9,5 +9,6 @@ router.use(authenticate);
 router.get('/', requireStoreAccess, orderController.getAll);
 router.get('/:id', requireStoreAccess, orderController.getById);
 router.patch('/:id/status', requireStoreAdmin, orderController.updateStatus);
+router.patch('/:id/payment-status', requireStoreAdmin, orderController.updatePaymentStatus);
 
 module.exports = router;

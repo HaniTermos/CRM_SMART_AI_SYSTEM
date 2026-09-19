@@ -4,6 +4,15 @@ const Product = require('./Product');
 class InventoryAdjustment {
   static async create({ store_id, product_id, delta, reason, note, created_by }) {
     return db.transaction(async (client) => {
+      const productResult = await client.query(
+        `UPDATE products SET stock = stock + $1 WHERE id = $2 AND store_id = $3 RETURNING *`,
+        [delta, product_id, store_id]
+      );
+
+      if (!productResult.rows[0]) {
+        throw new Error('Product not found');
+      }
+
       const adjResult = await client.query(
         `INSERT INTO inventory_adjustments (store_id, product_id, delta, reason, note, created_by) 
          VALUES ($1, $2, $3, $4, $5, $6) 
@@ -11,14 +20,7 @@ class InventoryAdjustment {
         [store_id, product_id, delta, reason, note, created_by]
       );
       
-      const adjustment = adjResult.rows[0];
-      
-      await client.query(
-        `UPDATE products SET stock = stock + $1 WHERE id = $2`,
-        [delta, product_id]
-      );
-
-      return adjustment;
+      return { ...adjResult.rows[0], stock: productResult.rows[0].stock };
     });
   }
 

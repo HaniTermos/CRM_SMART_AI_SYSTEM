@@ -40,6 +40,8 @@ router.get('/slug/:slug', productController.getBySlug);
 router.use(authenticate);
 router.post('/', requireStoreAdmin, productController.create);
 router.put('/:id', requireStoreAdmin, productController.update);
+router.patch('/:id/duplicate', requireStoreAdmin, productController.duplicate);
+router.patch('/bulk', requireStoreAdmin, productController.bulkUpdate);
 router.delete('/:id', requireStoreAdmin, productController.delete);
 router.post(
   '/upload', 

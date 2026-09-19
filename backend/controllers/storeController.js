@@ -1,6 +1,7 @@
 const { body } = require('express-validator');
 const Store = require('../models/Store');
 const { validate } = require('../middlewares/validate');
+const { initializeStoreCms } = require('../services/cmsInitializer');
 
 const createValidation = [
   body('name').notEmpty().trim().withMessage('Store name is required'),
@@ -30,6 +31,14 @@ exports.create = [
         owner_user_id: req.user.id,
         ...req.body
       });
+
+      // Initialize CMS V2 defaults for the new store
+      try {
+        await initializeStoreCms(store.id, store.slug);
+      } catch (cmsErr) {
+        console.error('[CMS] Failed to initialize store CMS:', cmsErr.message);
+      }
+
       res.status(201).json({ success: true, data: store });
     } catch (error) {
       next(error);
@@ -128,4 +137,38 @@ exports.getAlerts = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getMyDashboardStats = async (req, res, next) => {
+  try {
+    const DashboardService = require('../services/DashboardService');
+    const stores = await Store.findByUserId(req.user.id);
+    if (!stores || stores.length === 0) {
+      return res.status(404).json({ error: 'No store found for this account' });
+    }
+    const store = stores[0];
+    const stats = await DashboardService.getAuthenticatedStoreStats(store.id);
+
+    res.json({
+      success: true,
+      data: {
+        store: {
+          id: store.id,
+          name: store.name,
+          slug: store.slug,
+          currency: store.currency,
+          shipping_fee: store.shipping_fee,
+          phone: store.settings?.phone || '',
+          email: store.settings?.email || '',
+          address: store.settings?.address || '',
+          timezone: store.settings?.timezone || 'UTC+3',
+          isOpen: store.settings?.isOpen !== false,
+        },
+        ...stats,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 

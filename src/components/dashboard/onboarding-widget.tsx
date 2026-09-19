@@ -2,20 +2,45 @@
 
 import { motion } from "framer-motion";
 import { IOSCard } from "@/components/ui/ios-card";
-import { CheckCircle2, Circle, ChevronRight, Store, QrCode, Palette, Share2 } from "lucide-react";
+import { CheckCircle2, Circle, ChevronRight, Store, QrCode, Palette, Share2, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const TASKS = [
-  { id: 1, label: "Upload restaurant logo", done: true, icon: <Store className="h-4 w-4" /> },
-  { id: 2, label: "Set brand colors", done: true, icon: <Palette className="h-4 w-4" /> },
-  { id: 3, label: "Create your first menu", done: false, icon: <Store className="h-4 w-4" /> },
-  { id: 4, label: "Generate table QR codes", done: false, icon: <QrCode className="h-4 w-4" /> },
-  { id: 5, label: "Share your public link", done: false, icon: <Share2 className="h-4 w-4" /> },
-];
+import { useCmsSettings } from "@/lib/use-cms-v2";
+import { useMyStore } from "@/lib/use-my-store";
+import { useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
 export function OnboardingWidget() {
-  const completed = TASKS.filter((t) => t.done).length;
-  const progress = (completed / TASKS.length) * 100;
+  const { data: cms } = useCmsSettings();
+  const { data: store } = useMyStore();
+  const navigate = useNavigate();
+  const storeId = store?.id;
+
+  const { data: qrList = [] } = useQuery({
+    queryKey: ["qr-codes", storeId],
+    enabled: !!storeId,
+    queryFn: async () => {
+      const res = await api.get(`/qr/${storeId}`);
+      return res.data.data as any[];
+    },
+  });
+
+  const hasLogo = !!cms?.logo_url;
+  const hasColors = !!cms?.primary_color && cms.primary_color !== "#190E85";
+  const hasPublishedHomepage = !!cms?.homepage_published;
+  const hasQrCodes = qrList.length > 0;
+  const hasStorefrontLink = !!store?.slug && hasPublishedHomepage;
+
+  const tasks = [
+    { id: 1, label: "Upload storefront logo", done: hasLogo, icon: <Store className="h-4 w-4" />, route: "/cms" },
+    { id: 2, label: "Customize brand colors", done: hasColors, icon: <Palette className="h-4 w-4" />, route: "/cms" },
+    { id: 3, label: "Publish homepage content", done: hasPublishedHomepage, icon: <Globe className="h-4 w-4" />, route: "/cms" },
+    { id: 4, label: "Generate table QR codes", done: hasQrCodes, icon: <QrCode className="h-4 w-4" />, route: "/qr-manager" },
+    { id: 5, label: "Share public storefront link", done: hasStorefrontLink, icon: <Share2 className="h-4 w-4" />, route: "/settings" },
+  ];
+
+  const completed = tasks.filter((t) => t.done).length;
+  const progress = (completed / tasks.length) * 100;
 
   return (
     <motion.div
@@ -28,7 +53,7 @@ export function OnboardingWidget() {
           <div>
             <h3 className="font-semibold text-base">Getting Started</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {completed}/{TASKS.length} completed
+              {completed}/{tasks.length} completed
             </p>
           </div>
           <div className="relative w-12 h-12">
@@ -55,12 +80,13 @@ export function OnboardingWidget() {
         </div>
 
         <div className="space-y-1">
-          {TASKS.map((task, i) => (
+          {tasks.map((task, i) => (
             <motion.div
               key={task.id}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.55 + i * 0.05 }}
+              onClick={() => navigate({ to: task.route as any })}
               className={cn(
                 "flex items-center gap-3 p-2.5 rounded-xl transition-colors cursor-pointer",
                 task.done ? "opacity-50" : "hover:bg-muted/60"

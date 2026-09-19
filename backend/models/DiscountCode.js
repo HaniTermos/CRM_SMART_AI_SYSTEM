@@ -27,7 +27,7 @@ class DiscountCode {
     return result.rows[0] || null;
   }
 
-  static async update(id, updates) {
+  static async update(id, storeId, updates) {
     const fields = [];
     const values = [];
     let paramIndex = 1;
@@ -43,11 +43,14 @@ class DiscountCode {
       }
     });
 
-    if (fields.length === 0) return null;
+    if (fields.length === 0) {
+      const result = await db.query('SELECT * FROM discount_codes WHERE id = $1 AND store_id = $2', [id, storeId]);
+      return result.rows[0] || null;
+    }
 
-    values.push(id);
+    values.push(id, storeId);
     const result = await db.query(
-      `UPDATE discount_codes SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+      `UPDATE discount_codes SET ${fields.join(', ')}, updated_at = NOW() WHERE id = $${paramIndex} AND store_id = $${paramIndex + 1} RETURNING *`,
       values
     );
     return result.rows[0] || null;
@@ -61,10 +64,10 @@ class DiscountCode {
     return result.rows[0] || null;
   }
 
-  static async delete(id) {
+  static async delete(id, storeId) {
     const result = await db.query(
-      'DELETE FROM discount_codes WHERE id = $1 RETURNING id',
-      [id]
+      'DELETE FROM discount_codes WHERE id = $1 AND store_id = $2 RETURNING *',
+      [id, storeId]
     );
     return result.rows[0] || null;
   }

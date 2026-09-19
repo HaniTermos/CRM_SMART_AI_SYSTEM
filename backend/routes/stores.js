@@ -7,6 +7,7 @@ router.get('/slug/:slug', storeController.getBySlug);
 router.use(authenticate);
 router.post('/', storeController.create);
 router.get('/me', storeController.myStores);
+router.get('/me/dashboard', storeController.getMyDashboardStats);
 router.get('/:storeId', requireStoreAccess, storeController.getById);
 router.get('/:storeId/alerts', requireStoreAccess, storeController.getAlerts);
 router.put('/:storeId', requireStoreAdmin, storeController.update);

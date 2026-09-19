@@ -1,199 +1,311 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Search, Eye, Printer, Trash2, Plus, X, CheckCircle2, Clock, ChefHat, Package, Ban, Phone,
-} from "lucide-react";
-import { db, type Order } from "@/lib/db";
-import { IOSBadge } from "@/components/ui/ios-badge";
-
-const STATUS_FLOW: Order["status"][] = ["pending", "preparing", "ready", "delivered"];
-const STATUS_META: Record<string, { icon: any; color: string; label: string }> = {
-  pending: { icon: Clock, color: "text-amber-500", label: "Pending" },
-  preparing: { icon: ChefHat, color: "text-blue-500", label: "Preparing" },
-  ready: { icon: CheckCircle2, color: "text-emerald-500", label: "Ready" },
-  delivered: { icon: Package, color: "text-slate-500", label: "Delivered" },
-  cancelled: { icon: Ban, color: "text-red-500", label: "Cancelled" },
-};
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { Search, MapPin, Printer } from "lucide-react";
+import { api } from "@/lib/api";
+import { useMyStore } from "@/lib/use-my-store";
+import { QuickActions, type ActionItem } from "@/components/ui/quick-actions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_admin/orders")({
   component: OrdersRoute,
 });
 
-function OrdersRoute() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loaded, setLoaded] = useState(false);
-  const [filter, setFilter] = useState<"all" | Order["status"]>("all");
-  const [search, setSearch] = useState("");
-  const [modal, setModal] = useState<null | { type: "create" | "view"; order?: Order }>(null);
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  product_name: string;
+  unit_price: number;
+  quantity: number;
+  subtotal: number;
+}
 
-  // SSR-safe load
-  useState(() => {
-    if (typeof window !== "undefined") {
-      setOrders(db.orders.getAll());
-      setLoaded(true);
-    }
+export interface AdminOrder {
+  id: string;
+  store_id: string;
+  customer_id: string;
+  order_number: string;
+  status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
+  payment_method: string;
+  subtotal: number;
+  shipping_fee: number;
+  discount_amount: number;
+  total: number;
+  table_label?: string;
+  floor_id?: string;
+  shipping_address?: any;
+  notes?: string;
+  created_at: string;
+  customer_name?: string;
+  customer_phone?: string;
+  items?: OrderItem[];
+}
+
+function OrdersRoute() {
+  const queryClient = useQueryClient();
+  const { data: store } = useMyStore();
+  const storeId = store?.id;
+
+  const [filter, setFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
+
+  const { data: orders = [], isLoading } = useQuery({
+    queryKey: ["orders", storeId],
+    enabled: !!storeId,
+    refetchInterval: 5000,
+    queryFn: async () => {
+      const res = await api.get(`/orders/${storeId}`);
+      return res.data.data as AdminOrder[];
+    },
   });
 
-  const filtered = useMemo(() => {
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const res = await api.patch(`/orders/${storeId}/${id}/status`, { status });
+      return res.data.data;
+    },
+    onSuccess: (_, vars) => {
+      toast.success(`Order status updated to ${vars.status}`);
+      queryClient.invalidateQueries({ queryKey: ["orders", storeId] });
+      queryClient.invalidateQueries({ queryKey: ["kitchen-tickets", storeId] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.error || "Failed to update order status");
+    },
+  });
+
+  const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
       const matchFilter = filter === "all" ? true : o.status === filter;
-      const matchSearch = o.customer.toLowerCase().includes(search.toLowerCase()) || o.id.toLowerCase().includes(search.toLowerCase());
+      const q = search.toLowerCase();
+      const matchSearch =
+        o.order_number.toLowerCase().includes(q) ||
+        (o.customer_name || "").toLowerCase().includes(q) ||
+        (o.table_label || "").toLowerCase().includes(q);
       return matchFilter && matchSearch;
     });
   }, [orders, filter, search]);
 
-  const refresh = () => setOrders(db.orders.getAll());
+  const handlePrint = (order: AdminOrder) => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
 
-  const advanceStatus = (order: Order) => {
-    const idx = STATUS_FLOW.indexOf(order.status);
-    if (idx >= 0 && idx < STATUS_FLOW.length - 1) {
-      db.orders.update(order.id, { status: STATUS_FLOW[idx + 1] });
-      refresh();
-    }
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Receipt - Order #${order.order_number}</title>
+          <style>
+            body { font-family: monospace; padding: 20px; max-width: 300px; margin: auto; }
+            h2 { text-align: center; margin-bottom: 5px; }
+            .meta { font-size: 12px; margin-bottom: 15px; border-bottom: 1px dashed #000; padding-bottom: 10px; }
+            .item { font-size: 12px; display: flex; justify-content: space-between; margin-bottom: 5px; }
+            .total { font-weight: bold; font-size: 14px; border-top: 1px dashed #000; pt: 10px; margin-top: 10px; }
+          </style>
+        </head>
+        <body>
+          <h2>${store?.name || "SmartStore AI"}</h2>
+          <div class="meta">
+            <p>Order: #${order.order_number}</p>
+            <p>Date: ${new Date(order.created_at).toLocaleString()}</p>
+            ${order.table_label ? `<p><strong>Table: ${order.table_label}</strong></p>` : ""}
+          </div>
+          <div>
+            ${(order.items || [])
+              .map((i) => `<div class="item"><span>${i.quantity}x ${i.product_name}</span><span>$${Number(i.subtotal).toFixed(2)}</span></div>`)
+              .join("")}
+          </div>
+          <div class="total">
+            <div class="item"><span>TOTAL</span><span>$${Number(order.total).toFixed(2)}</span></div>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
   };
-
-  const cancelOrder = (id: string) => { db.orders.update(id, { status: "cancelled" }); refresh(); };
-  const deleteOrder = (id: string) => { db.orders.delete(id); refresh(); };
-
-  const createOrder = (data: Partial<Order>) => {
-    const newOrder: Order = {
-      id: `#${Math.floor(1000 + Math.random() * 9000)}`,
-      customer: data.customer || "Walk-in",
-      items: data.items || [{ name: "Custom Item", qty: 1, price: 0 }],
-      status: "pending",
-      type: data.type || "dine-in",
-      total: data.total || 0,
-      createdAt: new Date().toISOString(),
-      table: data.table,
-      note: data.note,
-    };
-    db.orders.add(newOrder);
-    refresh();
-    setModal(null);
-  };
-
-  if (!loaded) return <div className="h-96 flex items-center justify-center text-adaptive-muted">Loading orders...</div>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-end justify-between">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-adaptive">Orders</h1>
-          <p className="text-sm text-adaptive-muted">Manage and track all orders in real-time.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-adaptive">Orders Operations Manager</h1>
+          <p className="text-sm text-adaptive-muted">
+            Track real-time orders, table dine-in requests, KDS sync, and receipt printing.
+          </p>
         </div>
-        <button onClick={() => setModal({ type: "create" })} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#190E85] to-[#CF00FF] text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-lg shadow-[#190E85]/20">
-          <Plus className="h-4 w-4" /> New Order
-        </button>
       </div>
 
+      {/* Filters & Search */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative max-w-xs flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-adaptive-muted" />
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search orders..." className="w-full rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none glass-input" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search order #, customer, table..."
+            className="w-full rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none glass-input"
+          />
         </div>
-        <div className="flex gap-2">
-          {(["all", "pending", "preparing", "ready", "delivered", "cancelled"] as const).map((f) => (
-            <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-all border ${filter === f ? "bg-[#190E85] text-white border-[#190E85] shadow-md shadow-[#190E85]/20" : "glass-input border-transparent hover:border-gray-300 dark:hover:border-white/20"}`}>
+        <div className="flex flex-wrap gap-2">
+          {(["all", "pending", "confirmed", "shipped", "delivered", "cancelled"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-all border ${
+                filter === f
+                  ? "bg-[#190E85] text-white border-[#190E85] shadow-md"
+                  : "glass-input border-transparent hover:border-gray-300 dark:hover:border-white/20"
+              }`}
+            >
               {f}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="space-y-2">
-        <div className="hidden md:grid grid-cols-[80px_1fr_100px_100px_100px_120px_100px_auto] gap-4 px-4 py-2 text-[11px] font-semibold text-adaptive-muted uppercase tracking-wider">
-          <span>Order</span><span>Customer</span><span>Items</span><span>Total</span><span>Status</span><span>Type</span><span>Time</span><span></span>
-        </div>
-        <AnimatePresence>
-          {filtered.map((order, i) => {
-            const StatusIcon = STATUS_META[order.status]?.icon || Clock;
-            return (
-              <motion.div key={order.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ delay: i * 0.03 }}
-                className="group grid md:grid-cols-[80px_1fr_100px_100px_100px_120px_100px_auto] gap-4 px-4 py-3.5 rounded-2xl glass-adaptive items-center hover:shadow-lg transition-shadow">
-                <span className="text-sm font-mono font-medium text-adaptive">{order.id}</span>
-                <div>
-                  <p className="text-sm font-medium text-adaptive">{order.customer}</p>
-                  {order.phone && <p className="text-[11px] text-adaptive-muted">{order.phone}</p>}
-                </div>
-                <span className="text-sm text-adaptive">{order.items.reduce((a, b) => a + b.qty, 0)} items</span>
-                <span className="text-sm font-semibold text-adaptive">${order.total.toFixed(2)}</span>
-                <div className="flex items-center gap-2">
-                  <StatusIcon className={`h-3.5 w-3.5 ${STATUS_META[order.status]?.color}`} />
-                  <IOSBadge variant={order.status === "delivered" ? "success" : order.status === "ready" ? "aqua" : order.status === "pending" ? "warning" : order.status === "cancelled" ? "danger" : "secondary"} size="sm">{order.status}</IOSBadge>
-                </div>
-                <span className="text-xs text-adaptive-muted capitalize">{order.type}</span>
-                <span className="text-xs text-adaptive-muted">{new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => setModal({ type: "view", order })} className="p-1.5 rounded-lg hover-adaptive text-adaptive-muted hover:text-[#190E85] transition-colors"><Eye className="h-3.5 w-3.5" /></button>
-                  {order.status !== "delivered" && order.status !== "cancelled" && (
-                    <button onClick={() => advanceStatus(order)} className="p-1.5 rounded-lg hover:bg-emerald-500/10 text-adaptive-muted hover:text-emerald-500 transition-colors"><CheckCircle2 className="h-3.5 w-3.5" /></button>
-                  )}
-                  <button onClick={() => cancelOrder(order.id)} className="p-1.5 rounded-lg hover:bg-amber-500/10 text-adaptive-muted hover:text-amber-500 transition-colors"><Ban className="h-3.5 w-3.5" /></button>
-                  <button onClick={() => deleteOrder(order.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-adaptive-muted hover:text-red-500 transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
-                </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
+      {/* Orders Table */}
+      <div className="glass-adaptive rounded-2xl border border-white/20 overflow-hidden shadow-sm">
+        {isLoading ? (
+          <div className="p-12 text-center text-adaptive-muted text-sm animate-pulse">
+            Loading orders feed...
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="p-12 text-center text-adaptive-muted text-sm">
+            No orders found matching search criteria.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-black/5 dark:bg-white/5 border-b border-adaptive text-adaptive-muted font-semibold">
+                <tr>
+                  <th className="p-4">Order #</th>
+                  <th className="p-4">Table / Channel</th>
+                  <th className="p-4">Customer</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4">Total</th>
+                  <th className="p-4">Date</th>
+                  <th className="p-4 text-right">Quick Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-adaptive">
+                {filteredOrders.map((o) => {
+                  const quickActionsList: ActionItem[] = [
+                    { id: "view", label: "View", type: "view", onClick: () => setSelectedOrder(o) },
+                    { id: "confirm", label: "Confirm", type: "confirm", onClick: () => updateStatusMutation.mutate({ id: o.id, status: "confirmed" }), disabled: o.status === "confirmed" },
+                    { id: "prep", label: "Prep", type: "start_prep", onClick: () => updateStatusMutation.mutate({ id: o.id, status: "confirmed" }), disabled: o.status === "shipped" },
+                    { id: "deliver", label: "Deliver", type: "ready", onClick: () => updateStatusMutation.mutate({ id: o.id, status: "delivered" }), disabled: o.status === "delivered" },
+                    { id: "cancel", label: "Cancel", type: "cancel", onClick: () => updateStatusMutation.mutate({ id: o.id, status: "cancelled" }), disabled: o.status === "cancelled" }
+                  ];
+
+                  return (
+                    <tr key={o.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                      <td className="p-4 font-mono font-bold text-adaptive">#{o.order_number}</td>
+                      <td className="p-4">
+                        {o.table_label ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
+                            <MapPin className="w-3.5 h-3.5" /> 🪑 Table {o.table_label}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-adaptive-muted font-mono">Storefront / Direct</span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <div className="font-medium text-adaptive">{o.customer_name || "Guest Customer"}</div>
+                        <div className="text-xs text-adaptive-muted">{o.customer_phone || "—"}</div>
+                      </td>
+                      <td className="p-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                          o.status === "pending"
+                            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                            : o.status === "confirmed"
+                            ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                            : o.status === "delivered"
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : "bg-red-500/10 text-red-600 dark:text-red-400"
+                        }`}>
+                          {o.status}
+                        </span>
+                      </td>
+                      <td className="p-4 font-semibold text-adaptive">${Number(o.total).toFixed(2)}</td>
+                      <td className="p-4 text-xs text-adaptive-muted">{new Date(o.created_at).toLocaleString()}</td>
+                      <td className="p-4 text-right">
+                        <QuickActions actions={quickActionsList} size="sm" />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      <AnimatePresence>
-        {modal?.type === "create" && <OrderCreateModal onClose={() => setModal(null)} onCreate={createOrder} />}
-        {modal?.type === "view" && modal.order && <OrderViewModal order={modal.order} onClose={() => setModal(null)} />}
-      </AnimatePresence>
-    </div>
-  );
-}
+      {/* Order Detail Modal */}
+      {selectedOrder && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="glass-adaptive max-w-lg w-full p-6 rounded-2xl border border-white/20 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-adaptive pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-adaptive">Order #{selectedOrder.order_number}</h3>
+                <p className="text-xs text-adaptive-muted">
+                  {new Date(selectedOrder.created_at).toLocaleString()}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-adaptive"
+              >
+                ✕
+              </button>
+            </div>
 
-function OrderCreateModal({ onClose, onCreate }: { onClose: () => void; onCreate: (d: Partial<Order>) => void }) {
-  const [form, setForm] = useState({ customer: "", type: "dine-in", table: "", total: "", note: "" });
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-      <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-3xl glass-adaptive-strong p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-adaptive">New Order</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover-adaptive text-adaptive-muted"><X className="h-4 w-4" /></button>
-        </div>
-        <div className="space-y-3">
-          <input placeholder="Customer name" value={form.customer} onChange={(e) => setForm({ ...form, customer: e.target.value })} className="w-full rounded-xl px-4 py-2.5 text-sm glass-input outline-none" />
-          <div className="grid grid-cols-2 gap-3">
-            <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="w-full rounded-xl px-4 py-2.5 text-sm glass-input outline-none">
-              <option value="dine-in">Dine-in</option>
-              <option value="takeaway">Takeaway</option>
-              <option value="delivery">Delivery</option>
-            </select>
-            <input placeholder="Table (optional)" value={form.table} onChange={(e) => setForm({ ...form, table: e.target.value })} className="w-full rounded-xl px-4 py-2.5 text-sm glass-input outline-none" />
+            {selectedOrder.table_label && (
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 dark:text-emerald-400 text-sm font-bold flex items-center gap-2">
+                <MapPin className="w-4 h-4" /> Dine-in Table: {selectedOrder.table_label}
+              </div>
+            )}
+
+            <div className="space-y-2 text-sm text-adaptive">
+              <div className="flex justify-between py-1 border-b border-adaptive">
+                <span className="text-adaptive-muted">Customer:</span>
+                <span className="font-semibold">{selectedOrder.customer_name || "Guest"}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-adaptive">
+                <span className="text-adaptive-muted">Phone:</span>
+                <span>{selectedOrder.customer_phone || "—"}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-adaptive">
+                <span className="text-adaptive-muted">Payment:</span>
+                <span className="capitalize">{selectedOrder.payment_method}</span>
+              </div>
+              {selectedOrder.notes && (
+                <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-600 dark:text-amber-300">
+                  Notes: {selectedOrder.notes}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-adaptive">
+              <button
+                onClick={() => handlePrint(selectedOrder)}
+                className="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 flex items-center gap-2 hover:opacity-90"
+              >
+                <Printer className="w-3.5 h-3.5" /> Print Thermal Receipt
+              </button>
+
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="px-4 py-2 text-xs font-semibold rounded-xl border border-adaptive text-adaptive hover:bg-black/5 dark:hover:bg-white/5"
+              >
+                Close
+              </button>
+            </div>
           </div>
-          <input placeholder="Total amount" type="number" value={form.total} onChange={(e) => setForm({ ...form, total: e.target.value })} className="w-full rounded-xl px-4 py-2.5 text-sm glass-input outline-none" />
-          <textarea placeholder="Note..." value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="w-full rounded-xl px-4 py-2.5 text-sm glass-input outline-none min-h-[80px]" />
-          <button onClick={() => onCreate({ ...form, total: Number(form.total) })} className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#190E85] to-[#CF00FF] text-white font-medium hover:opacity-90 transition-opacity">Create Order</button>
         </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-function OrderViewModal({ order, onClose }: { order: Order; onClose: () => void }) {
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-      <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} onClick={(e) => e.stopPropagation()} className="w-full max-w-lg rounded-3xl glass-adaptive-strong p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div><h3 className="text-lg font-semibold text-adaptive">{order.id}</h3><p className="text-sm text-adaptive-muted">{order.customer}</p></div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover-adaptive text-adaptive-muted"><X className="h-4 w-4" /></button>
-        </div>
-        <div className="space-y-2">
-          {order.items.map((item, i) => (
-            <div key={i} className="flex justify-between text-sm text-adaptive"><span>{item.qty}x {item.name}</span><span className="font-medium">${(item.qty * item.price).toFixed(2)}</span></div>
-          ))}
-          <div className="border-t border-adaptive pt-2 flex justify-between font-semibold text-adaptive"><span>Total</span><span>${order.total.toFixed(2)}</span></div>
-        </div>
-        {order.note && <p className="text-xs text-adaptive-muted bg-adaptive-surface p-3 rounded-xl">Note: {order.note}</p>}
-        <div className="flex gap-2 pt-2">
-          <button className="flex-1 py-2 rounded-xl bg-adaptive-surface text-adaptive text-sm font-medium hover-adaptive transition-colors flex items-center justify-center gap-2"><Printer className="h-4 w-4" /> Print</button>
-          <a href={`tel:${order.phone || ""}`} className="flex-1 py-2 rounded-xl bg-adaptive-surface text-adaptive text-sm font-medium hover-adaptive transition-colors flex items-center justify-center gap-2"><Phone className="h-4 w-4" /> Call</a>
-        </div>
-      </motion.div>
-    </motion.div>
+      )}
+    </div>
   );
 }

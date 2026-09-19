@@ -1,6 +1,7 @@
 const { body } = require('express-validator');
 const DiscountCode = require('../models/DiscountCode');
 const { validate } = require('../middlewares/validate');
+const discountService = require('../services/discountService');
 
 const createValidation = [
   body('code').notEmpty().trim().isAlphanumeric(),
@@ -44,31 +45,19 @@ exports.validateCode = [
   validate,
   async (req, res, next) => {
     try {
-      const code = await DiscountCode.findByCode(req.params.storeId, req.body.code);
-      
-      if (!code) {
-        return res.status(404).json({ error: 'Invalid discount code' });
-      }
-      if (!code.active) {
-        return res.status(400).json({ error: 'Discount code is no longer active' });
-      }
-      if (code.expires_at && new Date(code.expires_at) < new Date()) {
-        return res.status(400).json({ error: 'Discount code has expired' });
-      }
-      if (code.max_uses && code.used_count >= code.max_uses) {
-        return res.status(400).json({ error: 'Discount code usage limit reached' });
-      }
-
-      // Safe return for public validation
-      res.json({ 
-        success: true, 
-        data: {
-          code: code.code,
-          type: code.type,
-          value: code.value,
-          min_subtotal: code.min_subtotal
-        } 
+      const result = await discountService.validateDiscount({
+        storeId: req.params.storeId,
+        code: req.body.code,
+        subtotal: req.body.subtotal,
+        phone: req.body.phone,
+        email: req.body.email
       });
+
+      const data = result.source === 'crm_deal'
+        ? { code: result.code, type: 'fixed', value: result.amount, min_subtotal: null }
+        : { code: result.code, type: result.type, value: result.value, min_subtotal: result.min_subtotal };
+
+      res.json({ success: true, data });
     } catch (error) {
       next(error);
     }
@@ -80,7 +69,7 @@ exports.toggle = [
   validate,
   async (req, res, next) => {
     try {
-      const code = await DiscountCode.update(req.params.id, { active: req.body.active });
+      const code = await DiscountCode.update(req.params.id, req.params.storeId, { active: req.body.active });
       if (!code) {
         return res.status(404).json({ error: 'Code not found' });
       }
@@ -93,7 +82,7 @@ exports.toggle = [
 
 exports.delete = async (req, res, next) => {
   try {
-    const deleted = await DiscountCode.delete(req.params.id);
+    const deleted = await DiscountCode.delete(req.params.id, req.params.storeId);
     if (!deleted) {
       return res.status(404).json({ error: 'Code not found' });
     }

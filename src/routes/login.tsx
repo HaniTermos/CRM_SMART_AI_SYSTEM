@@ -61,6 +61,7 @@ function LoginPage() {
 
 function AlreadySignedIn() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-12">
@@ -82,10 +83,7 @@ function AlreadySignedIn() {
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => {
-                localStorage.removeItem('smartstore_token');
-                window.location.href = "/login";
-              }}
+              onClick={() => logout()}
             >
               Sign out
             </Button>

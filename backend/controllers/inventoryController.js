@@ -1,7 +1,6 @@
 const { body } = require('express-validator');
 const InventoryAdjustment = require('../models/InventoryAdjustment');
 const { validate } = require('../middlewares/validate');
-const db = require('../config/database');
 
 const adjustValidation = [
   body('product_id').isUUID(),
@@ -23,9 +22,12 @@ exports.adjust = [
         note: req.body.note,
         created_by: req.user.id
       });
-      const productRes = await db.query('SELECT stock FROM products WHERE id = $1', [req.body.product_id]);
-      res.status(201).json({ success: true, data: { ...adjustment, stock: productRes.rows[0]?.stock } });
+
+      res.status(201).json({ success: true, data: adjustment });
     } catch (error) {
+      if (error.message === 'Product not found') {
+        return res.status(404).json({ error: 'Product not found' });
+      }
       next(error);
     }
   }

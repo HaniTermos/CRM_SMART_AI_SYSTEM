@@ -1,4 +1,7 @@
 const db = require('../config/database');
+const orderService = require('../services/orderService');
+const orderLookupService = require('../services/orderLookupService');
+const discountService = require('../services/discountService');
 
 exports.getStoreBySlug = async (req, res, next) => {
   try {
@@ -13,6 +16,53 @@ exports.getStoreBySlug = async (req, res, next) => {
       return res.status(404).json({ error: 'Store not found' });
     }
     res.json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getV3PublicPage = async (req, res, next) => {
+  try {
+    const { storeSlug, pageSlug } = req.params;
+    const storeRes = await db.query(`SELECT id FROM stores WHERE slug = $1`, [storeSlug]);
+    if (storeRes.rows.length === 0) {
+      return res.json({ success: true, data: { v3Enabled: false, fallback: true } });
+    }
+    const storeId = storeRes.rows[0].id;
+
+    // Check Site config flag
+    const siteRes = await db.query(`SELECT cms_v3_enabled FROM cms_v3_sites WHERE store_id = $1`, [storeId]);
+    const v3Enabled = siteRes.rows.length > 0 ? siteRes.rows[0].cms_v3_enabled : false;
+
+    if (!v3Enabled) {
+      return res.json({ success: true, data: { v3Enabled: false, fallback: true } });
+    }
+
+    // Lookup V3 Page
+    const targetSlug = pageSlug || 'home';
+    const pageRes = await db.query(`SELECT * FROM cms_v3_pages WHERE store_id = $1 AND slug = $2`, [storeId, targetSlug]);
+    if (pageRes.rows.length === 0 || !pageRes.rows[0].published_version_id || !pageRes.rows[0].is_published) {
+      return res.json({ success: true, data: { v3Enabled: true, hasPublishedVersion: false, fallback: true } });
+    }
+
+    const versionRes = await db.query(
+      `SELECT * FROM cms_v3_page_versions WHERE id = $1 AND store_id = $2 AND status = 'published'`,
+      [pageRes.rows[0].published_version_id, storeId]
+    );
+
+    if (versionRes.rows.length === 0) {
+      return res.json({ success: true, data: { v3Enabled: true, hasPublishedVersion: false, fallback: true } });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        v3Enabled: true,
+        fallback: false,
+        publishedDocument: versionRes.rows[0].component_tree,
+        page: pageRes.rows[0]
+      }
+    });
   } catch (error) {
     next(error);
   }
@@ -87,117 +137,26 @@ exports.getProductReviews = async (req, res, next) => {
 exports.placeOrder = async (req, res, next) => {
   try {
     const { slug } = req.params;
-    const { customer, address, notes, discount_code, items } = req.body;
+    const { customer, address, notes, discount_code, items, table_label, floor_id } = req.body;
 
-    const storeRes = await db.query('SELECT id, shipping_fee FROM stores WHERE slug = $1', [slug]);
+    const storeRes = await db.query('SELECT id FROM stores WHERE slug = $1', [slug]);
     if (storeRes.rows.length === 0) return res.status(404).json({ error: 'Store not found' });
-    const store = storeRes.rows[0];
 
-    let customerId;
-    const custRes = await db.query('SELECT id FROM customers WHERE store_id = $1 AND phone = $2', [store.id, customer.phone]);
-    if (custRes.rows.length > 0) {
-      customerId = custRes.rows[0].id;
-      await db.query('UPDATE customers SET name = $1, email = COALESCE($2, email) WHERE id = $3', [customer.name, customer.email, customerId]);
-    } else {
-      const newCust = await db.query(
-        'INSERT INTO customers (store_id, name, phone, email) VALUES ($1, $2, $3, $4) RETURNING id',
-        [store.id, customer.name, customer.phone, customer.email]
-      );
-      customerId = newCust.rows[0].id;
-    }
+    const source = table_label || floor_id ? 'dine_in' : (address && Object.keys(address).length > 0 ? 'delivery' : 'takeaway');
 
-    let subtotal = 0;
-    const orderItemsData = [];
-    for (const item of items) {
-      const prodRes = await db.query('SELECT name, price FROM products WHERE id = $1 AND store_id = $2', [item.product_id, store.id]);
-      if (prodRes.rows.length > 0) {
-        const prod = prodRes.rows[0];
-        const qty = item.quantity || 1;
-        subtotal += Number(prod.price) * qty;
-        orderItemsData.push({ product_id: item.product_id, product_name: prod.name, quantity: qty, unit_price: Number(prod.price) });
-      }
-    }
+    const result = await orderService.createOrder({
+      storeId: storeRes.rows[0].id,
+      customer,
+      address,
+      notes,
+      discount_code,
+      items,
+      table_label,
+      floor_id,
+      source
+    });
 
-    let discountAmount = 0;
-    if (discount_code) {
-      const normalizedCode = discount_code.toUpperCase();
-      const discRes = await db.query(
-        "SELECT type, value, min_subtotal FROM discount_codes WHERE store_id = $1 AND code = $2 AND active = true",
-        [store.id, normalizedCode]
-      );
-
-      if (discRes.rows.length > 0) {
-        const disc = discRes.rows[0];
-        if (disc.min_subtotal && subtotal < Number(disc.min_subtotal)) {
-          return res.status(400).json({ error: `Minimum order amount of ${disc.min_subtotal} required` });
-        }
-        if (disc.type === 'percent') discountAmount = subtotal * (Number(disc.value) / 100);
-        else discountAmount = Number(disc.value);
-      } else {
-        const dealRes = await db.query(
-          `SELECT d.value, c.phone AS customer_phone, c.email AS customer_email
-           FROM crm_deals d
-           JOIN customers c ON c.id = d.customer_id
-           WHERE d.store_id = $1 AND d.redemption_code = $2 AND d.redeemed_at IS NOT NULL`,
-          [store.id, normalizedCode]
-        );
-
-        if (dealRes.rows.length === 0) {
-          return res.status(400).json({ error: 'Invalid or inactive discount code' });
-        }
-
-        const deal = dealRes.rows[0];
-        if (deal.customer_phone !== customer.phone) {
-          return res.status(400).json({ error: 'Discount code does not match your phone number' });
-        }
-        if (deal.customer_email && customer.email && deal.customer_email !== customer.email) {
-          return res.status(400).json({ error: 'Discount code does not match your email address' });
-        }
-
-        discountAmount = Number(deal.value);
-      }
-    }
-
-    const total = Math.max(0, subtotal - discountAmount) + Number(store.shipping_fee || 0);
-
-    const orderNumber = `ORD-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-    const orderRes = await db.query(
-      `INSERT INTO orders (store_id, customer_id, order_number, subtotal, shipping_fee, discount_code, discount_amount, total, status, shipping_address, notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending', $9, $10) RETURNING id, order_number`,
-      [
-        store.id,
-        customerId,
-        orderNumber,
-        subtotal,
-        Number(store.shipping_fee || 0),
-        discount_code ? discount_code.toUpperCase() : null,
-        discountAmount,
-        total,
-        JSON.stringify(address),
-        notes,
-      ]
-    );
-    const orderId = orderRes.rows[0].id;
-
-    for (const oi of orderItemsData) {
-      await db.query(
-        'INSERT INTO order_items (order_id, product_id, product_name, quantity, unit_price, subtotal) VALUES ($1, $2, $3, $4, $5, $6)',
-        [orderId, oi.product_id, oi.product_name, oi.quantity, oi.unit_price, oi.quantity * oi.unit_price]
-      );
-      await db.query('UPDATE products SET stock = GREATEST(0, stock - $1) WHERE id = $2', [oi.quantity, oi.product_id]);
-    }
-
-    // Update customer order stats
-    await db.query(
-      `UPDATE customers 
-       SET total_orders = total_orders + 1, 
-           total_spent = total_spent + $1,
-           last_order_at = NOW()
-       WHERE id = $2`,
-      [total, customerId]
-    );
-
-    res.json({ success: true, data: { order_number: orderNumber, id: orderId } });
+    res.json({ success: true, data: result });
   } catch (error) {
     next(error);
   }
@@ -214,52 +173,9 @@ exports.validateDiscount = async (req, res, next) => {
     if (storeRes.rows.length === 0) return res.status(404).json({ error: 'Store not found' });
     const storeId = storeRes.rows[0].id;
 
-    const normalizedCode = code.toUpperCase();
-    const discRes = await db.query(
-      "SELECT id, type, value, min_subtotal FROM discount_codes WHERE store_id = $1 AND code = $2 AND active = true",
-      [storeId, normalizedCode]
-    );
+    const result = await discountService.validateDiscount({ storeId, code, subtotal, phone, email });
 
-    if (discRes.rows.length > 0) {
-      const disc = discRes.rows[0];
-      if (disc.min_subtotal && subtotal < Number(disc.min_subtotal)) {
-        return res.status(400).json({ error: `Minimum order amount of ${disc.min_subtotal} required` });
-      }
-
-      let amount = 0;
-      if (disc.type === 'percent') {
-        amount = subtotal * (Number(disc.value) / 100);
-      } else {
-        amount = Number(disc.value);
-      }
-
-      return res.json({ success: true, data: { code: normalizedCode, amount } });
-    }
-
-    const dealRes = await db.query(
-      `SELECT d.value, c.phone AS customer_phone, c.email AS customer_email
-       FROM crm_deals d
-       JOIN customers c ON c.id = d.customer_id
-       WHERE d.store_id = $1 AND d.redemption_code = $2 AND d.redeemed_at IS NOT NULL`,
-      [storeId, normalizedCode]
-    );
-
-    if (dealRes.rows.length === 0) {
-      return res.status(400).json({ error: 'Invalid or inactive discount code' });
-    }
-
-    const deal = dealRes.rows[0];
-    if (!phone) {
-      return res.status(400).json({ error: 'Enter your phone number to validate this deal redemption code' });
-    }
-    if (deal.customer_phone !== phone.trim()) {
-      return res.status(400).json({ error: 'This deal code does not match your phone number' });
-    }
-    if (email && deal.customer_email && deal.customer_email !== email.trim()) {
-      return res.status(400).json({ error: 'This deal code does not match your email address' });
-    }
-
-    res.json({ success: true, data: { code: normalizedCode, amount: Number(deal.value) } });
+    res.json({ success: true, data: { code: result.code, amount: result.amount } });
   } catch (error) {
     next(error);
   }
@@ -270,38 +186,16 @@ exports.lookupOrder = async (req, res, next) => {
     const { slug } = req.params;
     const { orderNumber, phone } = req.body;
 
-    const storeRes = await db.query('SELECT id, name, currency FROM stores WHERE slug = $1', [slug]);
+    const storeRes = await db.query('SELECT id FROM stores WHERE slug = $1', [slug]);
     if (storeRes.rows.length === 0) return res.status(404).json({ error: 'Store not found' });
-    const store = storeRes.rows[0];
 
-    const orderRes = await db.query(
-      `SELECT o.*, c.name as customer_name, c.email as customer_email, c.phone as customer_phone
-       FROM orders o
-       JOIN customers c ON o.customer_id = c.id
-       WHERE o.store_id = $1 AND o.order_number = $2 AND c.phone = $3`,
-      [store.id, orderNumber.toUpperCase(), phone]
-    );
-
-    if (orderRes.rows.length === 0) {
-      return res.status(404).json({ error: 'Order not found or phone number does not match' });
-    }
-
-    const order = orderRes.rows[0];
-    const itemsRes = await db.query('SELECT * FROM order_items WHERE order_id = $1', [order.id]);
-    const items = itemsRes.rows.map(item => ({
-      ...item,
-      subtotal: item.quantity * Number(item.unit_price)
-    }));
-
-    res.json({
-      success: true,
-      data: {
-        order,
-        items,
-        store: { currency: store.currency },
-        customer: { name: order.customer_name }
-      }
+    const result = await orderLookupService.lookupOrder({
+      storeId: storeRes.rows[0].id,
+      orderNumber,
+      phone
     });
+
+    res.json({ success: true, data: result });
   } catch (error) {
     next(error);
   }
@@ -458,5 +352,142 @@ exports.redeemDeal = async (req, res, next) => {
   }
 };
 
+exports.handleQrScan = async (req, res, next) => {
+  try {
+    const { qrId } = req.params;
+    const QrCode = require('../models/QrCode');
+    const qr = await QrCode.findById(qrId);
+    if (!qr) {
+      return res.status(404).send('QR Code not found');
+    }
+    await QrCode.incrementScanCount(qrId);
+    return res.redirect(302, qr.target_url);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getPublicStorefrontSnapshot = async (req, res, next) => {
+  try {
+    const { slug } = req.params;
+    const storeRes = await db.query(`SELECT id, name, slug, currency FROM stores WHERE slug = $1`, [slug]);
+    if (storeRes.rows.length === 0) return res.status(404).json({ error: 'Store not found' });
+    const store = storeRes.rows[0];
+
+    const CmsSettings = require('../models/CmsSettings');
+    const CmsTheme = require('../models/CmsTheme');
+    const CmsAnnouncement = require('../models/CmsAnnouncement');
+    const CmsNavigation = require('../models/CmsNavigation');
+
+    const appearance = await CmsSettings.findByStoreId(store.id);
+    const activeTheme = appearance.theme_id ? await CmsTheme.findById(appearance.theme_id) : null;
+    const activeAnnouncement = await CmsAnnouncement.findActivePublishedByStoreId(store.id);
+    const headerNav = await CmsNavigation.findByStoreId(store.id, 'header');
+    const footerNav = await CmsNavigation.findByStoreId(store.id, 'footer');
+
+    res.json({
+      success: true,
+      data: {
+        store: {
+          id: store.id,
+          name: store.name,
+          slug: store.slug,
+          currency: store.currency
+        },
+        appearance: {
+          logo_url: appearance.logo_url,
+          favicon_url: appearance.favicon_url,
+          primary_color: appearance.primary_color || '#190E85',
+          accent_color: appearance.accent_color || '#00E0FF',
+          font_family: appearance.font_family || 'Inter',
+          button_style: appearance.button_style || 'rounded',
+          border_radius: appearance.border_radius || '0.75rem',
+          theme_mode: appearance.theme_mode || 'light',
+          seo_title: appearance.seo_title,
+          seo_description: appearance.seo_description,
+          theme_id: appearance.theme_id,
+          theme: activeTheme
+        },
+        announcement: activeAnnouncement,
+        navigation: {
+          header: headerNav,
+          footer: footerNav
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getPublicPageV2 = async (req, res, next) => {
+  try {
+    const { slug, pageSlug } = req.params;
+    const storeRes = await db.query(`SELECT id FROM stores WHERE slug = $1`, [slug]);
+    if (storeRes.rows.length === 0) return res.status(404).json({ error: 'Store not found' });
+    const storeId = storeRes.rows[0].id;
+
+    const CmsPageV2 = require('../models/CmsPageV2');
+    const CmsPageSection = require('../models/CmsPageSection');
+    const CmsPreviewToken = require('../models/CmsPreviewToken');
+
+    const targetSlug = pageSlug || 'home';
+    const page = await CmsPageV2.findBySlug(storeId, targetSlug);
+    if (!page) return res.status(404).json({ error: 'Page not found' });
+
+    // Validate preview token if provided
+    let isAuthorizedPreview = false;
+    if (req.query.preview_token) {
+      isAuthorizedPreview = await CmsPreviewToken.validateToken(req.query.preview_token, storeId);
+    }
+
+    // Un-authenticated visitors only see published pages
+    if (!isAuthorizedPreview && page.status !== 'published') {
+      return res.status(404).json({ error: 'Page not found or not published' });
+    }
+
+    const sections = await CmsPageSection.findByPageId(page.id, storeId);
+    const visibleSections = isAuthorizedPreview ? sections : sections.filter(s => s.is_visible);
+
+    res.json({
+      success: true,
+      data: {
+        page: {
+          id: page.id,
+          title: page.title,
+          slug: page.slug,
+          type: page.type,
+          status: page.status,
+          is_preview: isAuthorizedPreview,
+          seo_title: page.seo_title,
+          seo_description: page.seo_description,
+          social_image_url: page.social_image_url
+        },
+        sections: visibleSections
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.submitPublicContactMessage = async (req, res, next) => {
+  try {
+    const { slug } = req.params;
+    const storeRes = await db.query(`SELECT id FROM stores WHERE slug = $1`, [slug]);
+    if (storeRes.rows.length === 0) return res.status(404).json({ error: 'Store not found' });
+
+    const CmsContactMessage = require('../models/CmsContactMessage');
+    const created = await CmsContactMessage.create({
+      ...req.body,
+      store_id: storeRes.rows[0].id
+    });
+
+    res.status(201).json({ success: true, data: created, message: 'Message sent successfully' });
+  } catch (error) {
+    if (error.status) return res.status(error.status).json({ error: error.message });
+    next(error);
+  }
+};
 
 

@@ -1,0 +1,14 @@
+{
+  "stores": 4,
+  "users": 9,
+  "products": 40,
+  "orders": 80,
+  "customers": 48,
+  "inventory_adjustments": 40,
+  "cms_pages": 12,
+  "cms_page_sections": 17,
+  "cms_page_versions": 0,
+  "cms_navigation_items": 28,
+  "cms_settings": 4,
+  "cms_themes": 4
+}

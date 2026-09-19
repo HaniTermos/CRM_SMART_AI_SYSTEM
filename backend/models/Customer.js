@@ -32,7 +32,7 @@ class Customer {
     return result.rows;
   }
 
-  static async update(id, updates, client = db) {
+  static async update(id, storeId, updates, client = db) {
     const fields = [];
     const values = [];
     let paramIndex = 1;
@@ -45,11 +45,14 @@ class Customer {
       }
     });
 
-    if (fields.length === 0) return null;
+    if (fields.length === 0) {
+      const result = await client.query('SELECT * FROM customers WHERE id = $1 AND store_id = $2', [id, storeId]);
+      return result.rows[0] || null;
+    }
 
-    values.push(id);
+    values.push(id, storeId);
     const result = await client.query(
-      `UPDATE customers SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+      `UPDATE customers SET ${fields.join(', ')}, updated_at = NOW() WHERE id = $${paramIndex} AND store_id = $${paramIndex + 1} RETURNING *`,
       values
     );
     return result.rows[0] || null;

@@ -12,12 +12,20 @@ export type User = {
 type AuthState = {
   user: User | null;
   loading: boolean;
+  logout: () => Promise<void>;
 };
 
-const AuthContext = createContext<AuthState>({ user: null, loading: true });
+const AuthContext = createContext<AuthState>({
+  user: null,
+  loading: true,
+  logout: async () => {},
+});
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>({ user: null, loading: true });
+  const [state, setState] = useState<{ user: User | null; loading: boolean }>({
+    user: null,
+    loading: true,
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -57,7 +65,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (error) {
+      console.warn("Server logout notification failed, proceeding with local token clearance:", error);
+    } finally {
+      localStorage.removeItem('smartstore_token');
+      setState({ user: null, loading: false });
+      window.location.href = '/login';
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{ user: state.user, loading: state.loading, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

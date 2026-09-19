@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChefHat, Clock, CheckCircle2, Volume2, VolumeX } from "lucide-react";
-import { db, type Order } from "@/lib/db";
+import { ChefHat, Clock, CheckCircle2, Volume2, VolumeX, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { useMyStore } from "@/lib/use-my-store";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_admin/kitchen")({
     component: KitchenRoute,
@@ -10,43 +13,83 @@ export const Route = createFileRoute("/_admin/kitchen")({
 
 const STATIONS = ["All", "Grill", "Cold", "Fryer", "Pizza", "Bar"];
 
+interface KitchenTicketItem {
+    id: string;
+    product_name: string;
+    quantity: number;
+    subtotal: number;
+}
+
+interface KitchenTicket {
+    id: string;
+    order_id: string;
+    order_number: string;
+    status: "pending" | "preparing" | "ready" | "completed" | "served";
+    station: string;
+    priority: number;
+    table_label: string | null;
+    floor_id: string | null;
+    customer_name: string | null;
+    order_notes: string | null;
+    order_created_at: string;
+    created_at: string;
+    items: KitchenTicketItem[];
+}
+
 function KitchenRoute() {
-    const [orders, setOrders] = useState<Order[]>([]);
+    const queryClient = useQueryClient();
+    const { data: store } = useMyStore();
+    const storeId = store?.id;
+
     const [station, setStation] = useState("All");
     const [soundOn, setSoundOn] = useState(true);
-    const [loaded, setLoaded] = useState(false);
 
-    useEffect(() => {
-        const load = () => {
-            const all = db.orders
-                .getAll()
-                .filter((o) => o.status === "pending" || o.status === "preparing");
-            setOrders(all);
-            setLoaded(true);
-        };
-        load();
-        const interval = setInterval(load, 5000);
-        return () => clearInterval(interval);
-    }, []);
+    const { data: tickets = [], isLoading } = useQuery({
+        queryKey: ["kitchen-tickets", storeId],
+        enabled: !!storeId,
+        refetchInterval: 5000,
+        queryFn: async () => {
+            const params = new URLSearchParams();
+            params.append("status", "pending,preparing");
+            const res = await api.get(`/kitchen/${storeId}?${params}`);
+            return res.data.data as KitchenTicket[];
+        },
+    });
 
-    const bump = (id: string) => {
-        db.orders.update(id, { status: "ready" });
-        setOrders((prev) => prev.filter((o) => o.id !== id));
-    };
+    const bumpMutation = useMutation({
+        mutationFn: async (id: string) => {
+            await api.put(`/kitchen/${storeId}/${id}/status`, { status: "ready" });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["kitchen-tickets", storeId] });
+            queryClient.invalidateQueries({ queryKey: ["orders", storeId] });
+            toast.success("Ticket bumped — ready");
+        },
+    });
 
     const filtered =
         station === "All"
-            ? orders
-            : orders.filter((o) =>
-                o.items.some((i) => i.name.toLowerCase().includes(station.toLowerCase()))
-            );
+            ? tickets
+            : tickets.filter((t) =>
+                  t.items.some((i) => i.product_name.toLowerCase().includes(station.toLowerCase()))
+              );
 
-    if (!loaded)
+    if (!storeId) {
         return (
-            <div className="h-screen flex items-center justify-center text-adaptive-muted text-2xl">
+            <div className="h-screen flex items-center justify-center text-adaptive-muted">
+                Create a store to use the kitchen display.
+            </div>
+        );
+    }
+
+    if (isLoading) {
+        return (
+            <div className="h-screen flex items-center justify-center text-adaptive-muted gap-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
                 Loading KDS...
             </div>
         );
+    }
 
     return (
         <div className="h-[calc(100vh-140px)] flex flex-col -mx-4 -my-6 px-4 py-6 bg-black/5 dark:bg-black/20">
@@ -57,11 +100,11 @@ function KitchenRoute() {
                     </div>
                     <div>
                         <h1 className="text-xl font-bold text-adaptive">Kitchen Display</h1>
-                        <p className="text-xs text-adaptive-muted">{orders.length} active tickets</p>
+                        <p className="text-xs text-adaptive-muted">{tickets.length} active tickets</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 flex-wrap justify-end">
                         {STATIONS.map((s) => (
                             <button
                                 key={s}
@@ -86,14 +129,14 @@ function KitchenRoute() {
 
             <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 content-start">
                 <AnimatePresence>
-                    {filtered.map((order) => {
+                    {filtered.map((ticket) => {
                         const age = Math.floor(
-                            (Date.now() - new Date(order.createdAt).getTime()) / 60000
+                            (Date.now() - new Date(ticket.order_created_at || ticket.created_at).getTime()) / 60000
                         );
                         const isUrgent = age > 15;
                         return (
                             <motion.div
-                                key={order.id}
+                                key={ticket.id}
                                 layout
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -106,11 +149,11 @@ function KitchenRoute() {
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <span className="text-2xl font-black text-adaptive">
-                                            {order.id}
+                                            {ticket.order_number || ticket.id.slice(0, 6)}
                                         </span>
-                                        {order.table && (
+                                        {ticket.table_label && (
                                             <span className="px-2 py-0.5 rounded-md bg-[#190E85]/10 text-[#190E85] dark:text-[#00E0FF] text-xs font-bold">
-                                                {order.table}
+                                                {ticket.table_label}
                                             </span>
                                         )}
                                     </div>
@@ -123,22 +166,23 @@ function KitchenRoute() {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    {order.items.map((item, i) => (
-                                        <div key={i} className="flex justify-between text-sm text-adaptive">
+                                    {ticket.items.map((item) => (
+                                        <div key={item.id} className="flex justify-between text-sm text-adaptive">
                                             <span className="font-semibold">
-                                                {item.qty}x {item.name}
+                                                {item.quantity}x {item.product_name}
                                             </span>
                                         </div>
                                     ))}
                                 </div>
-                                {order.note && (
+                                {ticket.order_notes && (
                                     <p className="text-xs text-amber-500 bg-amber-500/10 p-2 rounded-lg">
-                                        ⚠️ {order.note}
+                                        {ticket.order_notes}
                                     </p>
                                 )}
                                 <button
-                                    onClick={() => bump(order.id)}
-                                    className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                                    onClick={() => bumpMutation.mutate(ticket.id)}
+                                    disabled={bumpMutation.isPending}
+                                    className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-60"
                                 >
                                     <CheckCircle2 className="h-4 w-4" /> BUMP — Ready
                                 </button>

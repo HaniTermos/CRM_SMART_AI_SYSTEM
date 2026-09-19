@@ -33,7 +33,7 @@ exports.update = [
   validate,
   async (req, res, next) => {
     try {
-      const customer = await Customer.update(req.params.id, req.body);
+      const customer = await Customer.update(req.params.id, req.params.storeId, req.body);
       if (!customer) {
         return res.status(404).json({ error: 'Customer not found' });
       }
